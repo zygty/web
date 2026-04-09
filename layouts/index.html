@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dynamic Flight Demo</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <style>
+    body { margin: 0; }
+    #map { height: 100vh; }
+  </style>
+</head>
+
+<body>
+<div id="map"></div>
+
+<script>
+  // 1. 初始化地图
+  var map = L.map('map').setView([35.5, 114.5], 5);
+
+  // 2. 深色底图（更适合航迹）
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap & CartoDB'
+  }).addTo(map);
+
+  // 3. 航线（北京 → 上海）
+  var route = [
+    [39.9042, 116.4074],
+    [39.5, 116.9],
+    [38.9, 117.8],
+    [37.8, 118.8],
+    [36.7, 119.5],
+    [35.4, 120.1],
+    [34.1, 120.6],
+    [32.8, 121.0],
+    [31.2304, 121.4737]
+  ];
+
+  // 4. 画航线
+  var line = L.polyline(route, {
+    color: 'cyan',
+    weight: 3
+  }).addTo(map);
+
+  map.fitBounds(line.getBounds());
+
+  // 5. 飞机图标（用emoji先）
+  var planeIcon = L.divIcon({
+    html: "✈️",
+    className: "",
+    iconSize: [20, 20]
+  });
+
+  // 6. 飞机初始位置
+  var marker = L.marker(route[0], { icon: planeIcon }).addTo(map);
+
+  // 7. 动画函数
+  let i = 0;
+
+  function animateFlight() {
+    if (i >= route.length) {
+      i = 0; // 循环飞行
+    }
+
+    marker.setLatLng(route[i]);
+
+    i++;
+    setTimeout(animateFlight, 500); // 控制速度（越小越快）
+  }
+
+  animateFlight();
+
+  // 8. 点击地图显示经纬度（给你调试用）
+  map.on('click', function(e) {
+    alert("Lat: " + e.latlng.lat.toFixed(4) +
+          ", Lng: " + e.latlng.lng.toFixed(4));
+  });
+
+</script>
+</body>
+</html>
