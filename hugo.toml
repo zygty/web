@@ -1,3 +1,7 @@
-baseURL = 'https://example.org/'
-locale = 'en-us'
-title = 'My New Hugo Project'
+baseURL = '/'
+languageCode = 'zh-CN'
+title = '航空轨迹监控系统'
+
+[params]
+  description = "实时航空ADSB数据轨迹展示平台"
+  author = "Flight Tracker Team"

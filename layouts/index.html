@@ -1,83 +1,151 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <title>Dynamic Flight Demo</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Site.Title }}</title>
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-  <style>
-    body { margin: 0; }
-    #map { height: 100vh; }
-  </style>
+    <!-- 自定义样式 -->
+    <link rel="stylesheet" href="{{ "css/flight-tracker.css" | relURL }}">
 </head>
-
 <body>
-<div id="map"></div>
+    <!-- 顶部导航栏 -->
+    <header>
+        <div class="logo">
+            <div class="logo-icon">✈</div>
+            <div class="logo-text">{{ .Site.Title }}</div>
+        </div>
+        <div class="status-indicators">
+            <div class="status-item">
+                <span class="status-dot online"></span>
+                <span>系统在线</span>
+            </div>
+            <div class="status-item">
+                <span class="status-dot offline" id="dataStatus"></span>
+                <span id="dataStatusText">数据待接入</span>
+            </div>
+        </div>
+    </header>
 
-<script>
-  // 1. 初始化地图
-  var map = L.map('map').setView([35.5, 114.5], 5);
+    <!-- 主容器 -->
+    <div class="main-container">
+        <!-- 侧边控制面板 -->
+        <aside class="sidebar">
+            <!-- 数据状态面板 -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">数据状态</div>
+                <div class="data-status-card">
+                    <div class="status-row">
+                        <span class="status-label">活跃航班:</span>
+                        <span class="status-value highlight" id="activeFlights">0</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">数据更新:</span>
+                        <span class="status-value" id="lastUpdate">--:--:--</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">轨迹点数:</span>
+                        <span class="status-value" id="totalPoints">0</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">数据源:</span>
+                        <span class="status-value" id="dataSource">ADSB (待接入)</span>
+                    </div>
+                </div>
+            </div>
 
-  // 2. 深色底图（更适合航迹）
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap & CartoDB'
-  }).addTo(map);
+            <!-- 航班列表 -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">航班列表</div>
+                <div class="flight-list" id="flightList">
+                    <!-- 航班列表将通过JavaScript动态生成 -->
+                    <div class="flight-item">
+                        <div class="flight-item-header">
+                            <span class="flight-code">示例航班 CA1234</span>
+                            <span class="flight-status inactive">模拟</span>
+                        </div>
+                        <div class="flight-info">北京 → 上海 | 高度: 32000ft</div>
+                    </div>
+                </div>
+            </div>
 
-  // 3. 航线（北京 → 上海）
-  var route = [
-    [39.9042, 116.4074],
-    [39.5, 116.9],
-    [38.9, 117.8],
-    [37.8, 118.8],
-    [36.7, 119.5],
-    [35.4, 120.1],
-    [34.1, 120.6],
-    [32.8, 121.0],
-    [31.2304, 121.4737]
-  ];
+            <!-- 控制面板 -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">播放控制</div>
+                <div class="control-buttons">
+                    <button class="control-btn primary" id="playPauseBtn">
+                        <span>▶</span>
+                        <span>播放</span>
+                    </button>
+                    <button class="control-btn" id="resetBtn">
+                        <span>⟲</span>
+                        <span>重置</span>
+                    </button>
+                    <button class="control-btn" id="clearBtn">
+                        <span>✕</span>
+                        <span>清除</span>
+                    </button>
+                </div>
 
-  // 4. 画航线
-  var line = L.polyline(route, {
-    color: 'cyan',
-    weight: 3
-  }).addTo(map);
+                <div class="speed-control">
+                    <label>动画速度: <span id="speedValue">1.0</span>x</label>
+                    <input type="range" id="speedSlider" min="0.1" max="3.0" step="0.1" value="1.0">
+                </div>
+            </div>
 
-  map.fitBounds(line.getBounds());
+            <!-- 数据接口说明 -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">数据接口</div>
+                <div style="font-size: 12px; color: var(--text-muted); line-height: 1.8;">
+                    <p><strong>预留ADSB数据接口:</strong></p>
+                    <p style="margin-top: 8px;">• 函数位置: loadADSBData()</p>
+                    <p>• 数据格式: JSON数组</p>
+                    <p>• 字段: flight_id, lat, lng, altitude, timestamp</p>
+                    <p style="margin-top: 8px; color: var(--accent-cyan);">请在代码中搜索 "TODO: ADSB" 查看接口位置</p>
+                </div>
+            </div>
+        </aside>
 
-  // 5. 飞机图标（用emoji先）
-  var planeIcon = L.divIcon({
-    html: "✈️",
-    className: "",
-    iconSize: [20, 20]
-  });
+        <!-- 地图容器 -->
+        <div class="map-container">
+            <div id="map"></div>
 
-  // 6. 飞机初始位置
-  var marker = L.marker(route[0], { icon: planeIcon }).addTo(map);
+            <!-- 地图信息覆盖层 -->
+            <div class="map-overlay">
+                <div class="map-info-box">
+                    <div class="info-label">当前选中</div>
+                    <div class="info-value" id="selectedFlight">未选择</div>
+                </div>
+                <div class="map-info-box">
+                    <div class="info-label">地图中心</div>
+                    <div class="info-value" id="mapCenter">35.5°N, 114.5°E</div>
+                </div>
+                <div class="map-legend">
+                    <div class="legend-title">图例</div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(90deg, #3b82f6, #06b6d4);"></div>
+                        <span>活跃轨迹</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ef4444;"></div>
+                        <span>历史轨迹</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #10b981;"></div>
+                        <span>当前位置</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-  // 7. 动画函数
-  let i = 0;
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  function animateFlight() {
-    if (i >= route.length) {
-      i = 0; // 循环飞行
-    }
-
-    marker.setLatLng(route[i]);
-
-    i++;
-    setTimeout(animateFlight, 500); // 控制速度（越小越快）
-  }
-
-  animateFlight();
-
-  // 8. 点击地图显示经纬度（给你调试用）
-  map.on('click', function(e) {
-    alert("Lat: " + e.latlng.lat.toFixed(4) +
-          ", Lng: " + e.latlng.lng.toFixed(4));
-  });
-
-</script>
+    <!-- 主脚本 -->
+    <script src="{{ "js/flight-tracker.js" | relURL }}"></script>
 </body>
 </html>

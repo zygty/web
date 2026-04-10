@@ -1,0 +1,46 @@
+[
+  {
+    "flight_id": "CA1234",
+    "callsign": "CCA1234",
+    "route": [
+      { "lat": 39.9042, "lng": 116.4074, "altitude": 32000, "timestamp": "2024-01-01T10:00:00Z" },
+      { "lat": 39.5000, "lng": 116.9000, "altitude": 32500, "timestamp": "2024-01-01T10:05:00Z" },
+      { "lat": 38.9000, "lng": 117.8000, "altitude": 33000, "timestamp": "2024-01-01T10:10:00Z" },
+      { "lat": 37.8000, "lng": 118.8000, "altitude": 33500, "timestamp": "2024-01-01T10:15:00Z" },
+      { "lat": 36.7000, "lng": 119.5000, "altitude": 34000, "timestamp": "2024-01-01T10:20:00Z" },
+      { "lat": 35.4000, "lng": 120.1000, "altitude": 34500, "timestamp": "2024-01-01T10:25:00Z" },
+      { "lat": 34.1000, "lng": 120.6000, "altitude": 35000, "timestamp": "2024-01-01T10:30:00Z" },
+      { "lat": 32.8000, "lng": 121.0000, "altitude": 35500, "timestamp": "2024-01-01T10:35:00Z" },
+      { "lat": 31.2304, "lng": 121.4737, "altitude": 36000, "timestamp": "2024-01-01T10:40:00Z" }
+    ]
+  },
+  {
+    "flight_id": "MU5678",
+    "callsign": "CSN5678",
+    "route": [
+      { "lat": 31.2304, "lng": 121.4737, "altitude": 28000, "timestamp": "2024-01-01T11:00:00Z" },
+      { "lat": 32.0000, "lng": 121.0000, "altitude": 28500, "timestamp": "2024-01-01T11:05:00Z" },
+      { "lat": 33.5000, "lng": 120.0000, "altitude": 29000, "timestamp": "2024-01-01T11:10:00Z" },
+      { "lat": 34.8000, "lng": 119.0000, "altitude": 29500, "timestamp": "2024-01-01T11:15:00Z" },
+      { "lat": 36.0000, "lng": 118.0000, "altitude": 30000, "timestamp": "2024-01-01T11:20:00Z" },
+      { "lat": 37.2000, "lng": 117.0000, "altitude": 30500, "timestamp": "2024-01-01T11:25:00Z" },
+      { "lat": 38.5000, "lng": 116.0000, "altitude": 31000, "timestamp": "2024-01-01T11:30:00Z" },
+      { "lat": 39.9042, "lng": 116.4074, "altitude": 31500, "timestamp": "2024-01-01T11:35:00Z" }
+    ]
+  },
+  {
+    "flight_id": "CZ3456",
+    "callsign": "CSN3456",
+    "route": [
+      { "lat": 22.5431, "lng": 114.0579, "altitude": 30000, "timestamp": "2024-01-01T12:00:00Z" },
+      { "lat": 23.5000, "lng": 114.5000, "altitude": 30500, "timestamp": "2024-01-01T12:05:00Z" },
+      { "lat": 25.0000, "lng": 115.0000, "altitude": 31000, "timestamp": "2024-01-01T12:10:00Z" },
+      { "lat": 27.0000, "lng": 115.5000, "altitude": 31500, "timestamp": "2024-01-01T12:15:00Z" },
+      { "lat": 29.5000, "lng": 116.0000, "altitude": 32000, "timestamp": "2024-01-01T12:20:00Z" },
+      { "lat": 31.5000, "lng": 116.5000, "altitude": 32500, "timestamp": "2024-01-01T12:25:00Z" },
+      { "lat": 33.5000, "lng": 117.0000, "altitude": 33000, "timestamp": "2024-01-01T12:30:00Z" },
+      { "lat": 35.5000, "lng": 117.5000, "altitude": 33500, "timestamp": "2024-01-01T12:35:00Z" },
+      { "lat": 37.8000, "lng": 118.0000, "altitude": 34000, "timestamp": "2024-01-01T12:40:00Z" }
+    ]
+  }
+]
