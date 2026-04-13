@@ -72,7 +72,23 @@
                 </div>
             </div>
 
-            <!-- 控制面板 -->
+            <!-- 时间轴控制 -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">时间轴控制</div>
+                <div class="timeline-control">
+                    <div class="time-display">
+                        <span id="currentTime">--:--:--</span>
+                        <span class="time-range" id="timeRange">加载中...</span>
+                    </div>
+                    <input type="range" id="timeSlider" min="0" max="100" step="0.1" value="0" disabled>
+                    <div class="timeline-info">
+                        <span>活跃航班: <strong id="activeFlightsCount">0</strong></span>
+                        <span>总航班: <strong id="totalFlightsCount">0</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 播放控制 -->
             <div class="sidebar-section">
                 <div class="sidebar-title">播放控制</div>
                 <div class="control-buttons">
@@ -91,8 +107,8 @@
                 </div>
 
                 <div class="speed-control">
-                    <label>动画速度: <span id="speedValue">1.0</span>x</label>
-                    <input type="range" id="speedSlider" min="0.1" max="3.0" step="0.1" value="1.0">
+                    <label>播放速度: <span id="speedValue">1.0</span>x</label>
+                    <input type="range" id="speedSlider" min="0.1" max="10.0" step="0.1" value="1.0">
                 </div>
             </div>
 
@@ -100,11 +116,11 @@
             <div class="sidebar-section">
                 <div class="sidebar-title">数据接口</div>
                 <div style="font-size: 12px; color: var(--text-muted); line-height: 1.8;">
-                    <p><strong>预留ADSB数据接口:</strong></p>
-                    <p style="margin-top: 8px;">• 函数位置: loadADSBData()</p>
-                    <p>• 数据格式: JSON数组</p>
-                    <p>• 字段: flight_id, lat, lng, altitude, timestamp</p>
-                    <p style="margin-top: 8px; color: var(--accent-cyan);">请在代码中搜索 "TODO: ADSB" 查看接口位置</p>
+                    <p><strong>ADSB数据源:</strong></p>
+                    <p style="margin-top: 8px;">• 已加载合并后的ADSB数据</p>
+                    <p>• 数据格式: JSON (adsb_flights_combined_simplified.json)</p>
+                    <p>• 包含航班轨迹、高度、速度等信息</p>
+                    <p style="margin-top: 8px; color: var(--accent-cyan);">数据已自动加载并显示在地图上</p>
                 </div>
             </div>
         </aside>
