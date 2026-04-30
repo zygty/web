@@ -541,3 +541,116 @@ header .status-indicators {
         gap: 10px;
     }
 }
+
+/* ==================== 图层控制器样式 ==================== */
+.leaflet-control-layers {
+    background: rgba(17, 24, 39, 0.95) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.leaflet-control-layers-toggle {
+    background-color: var(--bg-tertiary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 4px !important;
+}
+
+.leaflet-control-layers-selector {
+    margin: 3px 0;
+}
+
+.leaflet-control-layers label {
+    color: var(--text-secondary) !important;
+    font-size: 13px;
+    padding: 4px 0;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.leaflet-control-layers label:hover {
+    color: var(--text-primary) !important;
+}
+
+.leaflet-control-layers-overlays label {
+    border-top: 1px solid var(--border-color);
+    padding-top: 8px;
+    margin-top: 8px;
+}
+
+.leaflet-control-layers-base {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+}
+
+/* 自定义复选框样式 */
+.leaflet-control-layers-selector input[type="radio"],
+.leaflet-control-layers-selector input[type="checkbox"] {
+    accent-color: var(--accent-blue);
+    cursor: pointer;
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+    .leaflet-control-layers {
+        font-size: 12px;
+    }
+
+    .leaflet-control-layers label {
+        padding: 6px 0;
+    }
+}
+
+/* ==================== 地图加载指示器 ==================== */
+.map-loading-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(17, 24, 39, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 30px 40px;
+    text-align: center;
+    z-index: 2000;
+    display: none;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.map-loading-indicator.active {
+    display: block;
+}
+
+.map-loading-indicator .spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--bg-tertiary);
+    border-top: 4px solid var(--accent-cyan);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.map-loading-indicator .loading-text {
+    color: var(--text-secondary);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.map-loading-indicator .loading-subtext {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+

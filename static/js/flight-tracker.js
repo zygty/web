@@ -104,19 +104,143 @@ async function loadADSBData() {
 }
 
 // ==================== 地图初始化 ====================
+
+/**
+ * 显示加载指示器
+ * @param {string} text - 加载文本
+ */
+function showLoadingIndicator(text = '正在加载...') {
+    const indicator = document.getElementById('mapLoadingIndicator');
+    if (indicator) {
+        indicator.querySelector('.loading-text').textContent = text;
+        indicator.classList.add('active');
+    }
+}
+
+/**
+ * 隐藏加载指示器
+ */
+function hideLoadingIndicator() {
+    const indicator = document.getElementById('mapLoadingIndicator');
+    if (indicator) {
+        indicator.classList.remove('active');
+    }
+}
+
 /**
  * 初始化Leaflet地图
  */
 function initMap() {
+    console.log('[DEBUG] 开始初始化地图...');
+    console.log('[DEBUG] Leaflet版本:', L.version);
+
     // 初始化地图，中心设置在中国
     map = L.map('map').setView([35.5, 114.5], 5);
+    console.log('[DEBUG] 地图对象已创建');
 
-    // 使用深色地图瓦片
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 20
-    }).addTo(map);
+    // 定义多个基础图层（优化性能配置）
+    const baseLayers = {
+        '深色主题': L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20,
+            minZoom: 3,
+            maxNativeZoom: 18,
+            tileSize: 256,
+            keepBuffer: 1,  // 减少缓冲区
+            updateWhenIdle: true,  // 只在空闲时更新
+            updateWhenZooming: false,  // 缩放时不立即更新
+            zIndex: 1
+        }),
+        '地形图': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)',
+            maxZoom: 17,
+            minZoom: 3,
+            maxNativeZoom: 17,
+            tileSize: 256,
+            keepBuffer: 1,
+            updateWhenIdle: true,
+            updateWhenZooming: false,
+            zIndex: 1
+        }),
+        '卫星图': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '&copy; <a href="https://www.esri.com/">Esri</a>, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+            maxZoom: 19,
+            minZoom: 3,
+            maxNativeZoom: 19,
+            tileSize: 256,
+            keepBuffer: 1,
+            updateWhenIdle: true,
+            updateWhenZooming: false,
+            zIndex: 1
+        }),
+        '标准地图': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19,
+            minZoom: 3,
+            maxNativeZoom: 19,
+            tileSize: 256,
+            keepBuffer: 1,
+            updateWhenIdle: true,
+            updateWhenZooming: false,
+            zIndex: 1
+        }),
+        '地形+等高线': L.tileLayer('https://tiles.wmflabs.org/hikebike/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://www.wikimedia.org/">Wikimedia</a>',
+            maxZoom: 17,
+            minZoom: 3,
+            maxNativeZoom: 17,
+            tileSize: 256,
+            keepBuffer: 1,
+            updateWhenIdle: true,
+            updateWhenZooming: false,
+            zIndex: 1
+        })
+    };
+
+    console.log('[DEBUG] 图层对象已创建，图层数量:', Object.keys(baseLayers).length);
+
+    // 添加默认图层（深色主题）
+    baseLayers['深色主题'].addTo(map);
+    console.log('[DEBUG] 默认图层已添加');
+
+    // 添加图层控制器
+    console.log('[DEBUG] 正在创建图层控制器...');
+    try {
+        const layerControl = L.control.layers(baseLayers, null, {
+            position: 'topright',
+            collapsed: false  // 默认展开
+        });
+        console.log('[DEBUG] 图层控制器对象已创建:', layerControl);
+        layerControl.addTo(map);
+        console.log('[DEBUG] 图层控制器已添加到地图');
+
+        // 监听图层切换事件
+        map.on('baselayerchange', function(e) {
+            console.log('[DEBUG] 切换到图层:', e.name);
+            showLoadingIndicator('正在加载 ' + e.name + '...');
+
+            // 检查瓦片加载完成
+            const checkLoading = function() {
+                const tiles = document.querySelectorAll('.leaflet-tile-container img');
+                const loadingTiles = Array.from(tiles).filter(img => !img.complete);
+
+                if (loadingTiles.length === 0) {
+                    // 所有瓦片加载完成
+                    setTimeout(hideLoadingIndicator, 500);
+                } else {
+                    // 继续检查
+                    setTimeout(checkLoading, 200);
+                }
+            };
+
+            // 开始检查加载状态
+            setTimeout(checkLoading, 100);
+        });
+
+    } catch (error) {
+        console.error('[ERROR] 添加图层控制器失败:', error);
+    }
 
     // 监听地图移动事件
     map.on('move', function() {
@@ -124,6 +248,8 @@ function initMap() {
         document.getElementById('mapCenter').textContent =
             `${center.lat.toFixed(2)}°N, ${center.lng.toFixed(2)}°E`;
     });
+
+    console.log('[DEBUG] 地图初始化完成');
 }
 
 // ==================== 时间轴管理 ====================

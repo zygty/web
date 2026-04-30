@@ -1,0 +1,18 @@
+- title: 导航
+  url: /
+
+- title: 课程作业
+  pages:
+    - title: Assignment 1
+      url: /assignment1/
+    - title: Assignment 2
+      url: /assignment2/
+    - title: Assignment 3
+      url: /assignment3/
+    - title: Assignment 4
+      url: /assignment4/
+
+- title: 功能展示
+  pages:
+    - title: 航空地图
+      url: /map/
