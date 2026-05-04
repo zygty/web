@@ -1,4 +1,4 @@
-baseURL = '/'
+baseURL = "https://zygty.github.io/web/"
 languageCode = 'zh-CN'
 title = '航空轨迹监控系统'
 
