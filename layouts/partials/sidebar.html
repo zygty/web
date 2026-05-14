@@ -1,0 +1,25 @@
+{{ $sidebar := site.Data.sidebar }}
+{{ $currentPage := . }}
+<nav class="sidebar-nav">
+    <h3 class="sidebar-title">目录导航</h3>
+    <ul class="sidebar-list">
+        {{ range $sidebar }}
+            {{ if .pages }}
+                <li class="sidebar-item sidebar-section">
+                    <div class="sidebar-section-title">{{ .title }}</div>
+                    <ul class="sidebar-sublist">
+                        {{ range .pages }}
+                            <li class="sidebar-item">
+                                <a href="{{ .url | relURL }}" class="sidebar-link{{ if eq $currentPage.RelPermalink (.url | relURL) }} active{{ end }}">{{ .title }}</a>
+                            </li>
+                        {{ end }}
+                    </ul>
+                </li>
+            {{ else }}
+                <li class="sidebar-item">
+                    <a href="{{ .url | relURL }}" class="sidebar-link{{ if eq $currentPage.RelPermalink (.url | relURL) }} active{{ end }}">{{ .title }}</a>
+                </li>
+            {{ end }}
+        {{ end }}
+    </ul>
+</nav>

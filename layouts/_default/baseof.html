@@ -16,19 +16,24 @@
         </div>
         <nav>
             <ul>
-                <li><a href="{{ .Site.BaseURL }}">主页</a></li>
-                <li><a href="{{ "/map/" | relURL }}">航空地图</a></li>
-                <li><a href="{{ "/assignment1/" | relURL }}">Assignment 1</a></li>
-                <li><a href="{{ "/assignment2/" | relURL }}">Assignment 2</a></li>
-                <li><a href="{{ "/assignment3/" | relURL }}">Assignment 3</a></li>
-                <li><a href="{{ "/assignment4/" | relURL }}">Assignment 4</a></li>
+                <li><a href="{{ "/" | relURL }}">主页</a></li>
+                <li><a href="{{ "map" | relURL }}">航空地图</a></li>
+                <li><a href="{{ "assignment1" | relURL }}">Assignment 1</a></li>
+                <li><a href="{{ "assignment2" | relURL }}">Assignment 2</a></li>
+                <li><a href="{{ "assignment3" | relURL }}">Assignment 3</a></li>
+                <li><a href="{{ "assignment4" | relURL }}">Assignment 4</a></li>
             </ul>
         </nav>
     </header>
 
-    <main>
-        {{ block "main" . }}{{ end }}
-    </main>
+    <div class="container">
+        <aside class="sidebar">
+            {{ partial "sidebar.html" . }}
+        </aside>
+        <main>
+            {{ block "main" . }}{{ end }}
+        </main>
+    </div>
 
     <footer>
         <p>&copy; 2026 {{ .Site.Title }}. All rights reserved.</p>
