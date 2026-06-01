@@ -67,7 +67,9 @@ function deduplicateFlights(flights) {
 async function loadADSBData() {
     try {
         console.log('正在加载ADSB数据...');
-        const response = await fetch('/data/adsb_flights_combined_simplified.json');
+        // 使用 window.location.pathname 获取当前路径前缀
+        const pathPrefix = window.location.pathname.replace(/\/$/, '').replace(/\/map$/, '');
+        const response = await fetch(`${pathPrefix}/data/adsb_flights_combined_simplified.json`);
         const rawData = await response.json();
 
         console.log(`数据加载成功: ${rawData.metadata?.total_flights || 0} 个航班`);
