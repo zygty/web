@@ -293,12 +293,33 @@ function updateTimeRangeDisplay() {
     const startDate = new Date(timeMin);
     const endDate = new Date(timeMax);
 
-    const formatDate = (date) => {
-        return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+    // 更新日期信息
+    const dateStr = startDate.toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'long'
+    });
+    document.getElementById('dataDate').textContent = dateStr;
+
+    // 更新开始和结束时间
+    const formatTime = (date) => {
+        return date.toLocaleTimeString('zh-CN', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
     };
 
-    document.getElementById('timeRange').textContent =
-        `${formatDate(startDate)} - ${formatDate(endDate)}`;
+    document.getElementById('startTime').textContent = formatTime(startDate);
+    document.getElementById('endTime').textContent = formatTime(endDate);
+
+    // 更新数据时长
+    const durationHours = (timeRange / 1000 / 3600).toFixed(1);
+    const durationMinutes = (timeRange / 1000 / 60).toFixed(0);
+    document.getElementById('dataDuration').textContent =
+        durationHours >= 1 ? `${durationHours} 小时` : `${durationMinutes} 分钟`;
 
     updateTimeDisplay();
 }
@@ -548,12 +569,19 @@ function updateFlightPositions(targetTime) {
     // 更新活跃航班计数
     document.getElementById('activeFlightsCount').textContent = activeFlights.size;
     document.getElementById('activeFlights').textContent = activeFlights.size;
+
+    // 更新航班列表显示（如果没有选中航班，显示所有活跃航班）
+    const selectedFlightText = document.getElementById('selectedFlight').textContent;
+    if (selectedFlightText === '未选择' || selectedFlightText === '') {
+        updateFlightListDisplay(null); // 显示所有活跃航班
+    }
 }
 
 /**
  * 选中航班
  */
 function selectFlight(flightId) {
+    console.log('选中航班:', flightId);
     document.getElementById('selectedFlight').textContent = flightId;
 
     // 找到对应航班并聚焦
@@ -563,6 +591,105 @@ function selectFlight(flightId) {
         map.setView(marker.getLatLng(), 8);
         marker.openPopup();
     }
+
+    // 更新航班列表显示选中航班的详细信息
+    updateFlightListDisplay(flightId);
+}
+
+/**
+ * 更新航班列表显示
+ */
+function updateFlightListDisplay(selectedFlightId = null) {
+    const flightListContainer = document.getElementById('flightList');
+    if (!flightListContainer) return;
+
+    if (selectedFlightId) {
+        // 显示选中航班的详细信息
+        const flightMarker = flightMarkers[selectedFlightId];
+        if (!flightMarker) return;
+
+        const flight = flightMarker.flight;
+        const currentPointIndex = getCurrentPointIndex(flight, currentTime);
+        const point = flight.route[currentPointIndex] || flight.route[0];
+
+        const date = new Date(point.timestamp);
+        const altitudeFt = (point.altitude * 3.28084).toFixed(0);
+        const speedKmh = point.speed.toFixed(0);
+
+        flightListContainer.innerHTML = `
+            <div class="flight-item selected">
+                <div class="flight-item-header">
+                    <span class="flight-code">${flight.callsign}</span>
+                    <span class="flight-status active">已选中</span>
+                </div>
+                <div class="flight-info">
+                    <div><strong>机型:</strong> ${flight.type || 'N/A'}</div>
+                    <div><strong>国籍:</strong> ${flight.country || 'N/A'}</div>
+                    <div><strong>高度:</strong> ${altitudeFt} ft</div>
+                    <div><strong>速度:</strong> ${speedKmh} km/h</div>
+                    <div><strong>航向:</strong> ${point.heading.toFixed(0)}°</div>
+                    <div><strong>时间:</strong> ${date.toLocaleString('zh-CN')}</div>
+                    <div><strong>位置:</strong> ${point.lat.toFixed(4)}°N, ${point.lng.toFixed(4)}°E</div>
+                </div>
+            </div>
+        `;
+    } else {
+        // 显示所有活跃航班列表
+        if (activeFlights.size === 0) {
+            flightListContainer.innerHTML = `
+                <div class="flight-item">
+                    <div class="flight-item-header">
+                        <span class="flight-code">无活跃航班</span>
+                        <span class="flight-status inactive">--</span>
+                    </div>
+                    <div class="flight-info">当前时间没有活跃航班</div>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        activeFlights.forEach(flightId => {
+            const flightMarker = flightMarkers[flightId];
+            if (!flightMarker) return;
+
+            const flight = flightMarker.flight;
+            const currentPointIndex = getCurrentPointIndex(flight, currentTime);
+            const point = flight.route[currentPointIndex] || flight.route[0];
+            const altitudeFt = (point.altitude * 3.28084).toFixed(0);
+            const speedKmh = point.speed.toFixed(0);
+
+            html += `
+                <div class="flight-item" onclick="selectFlight('${flightId}')" style="cursor: pointer;">
+                    <div class="flight-item-header">
+                        <span class="flight-code">${flight.callsign}</span>
+                        <span class="flight-status active">活跃</span>
+                    </div>
+                    <div class="flight-info">${flight.country} | 高度: ${altitudeFt}ft | 速度: ${speedKmh}km/h</div>
+                </div>
+            `;
+        });
+
+        flightListContainer.innerHTML = html || '<div class="flight-info">无活跃航班</div>';
+    }
+}
+
+/**
+ * 获取当前时间对应的轨迹点索引
+ */
+function getCurrentPointIndex(flight, targetTime) {
+    let closestIndex = -1;
+    let minDiff = Infinity;
+
+    flight.route.forEach((point, index) => {
+        const diff = Math.abs(point.timestamp - targetTime);
+        if (diff < minDiff) {
+            minDiff = diff;
+            closestIndex = index;
+        }
+    });
+
+    return closestIndex;
 }
 
 // ==================== 动画控制 ====================
@@ -679,10 +806,17 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('clearBtn').addEventListener('click', clearFlights);
 
     // 速度滑块
-    document.getElementById('speedSlider').addEventListener('input', function(e) {
-        animationSpeed = parseFloat(e.target.value);
-        document.getElementById('speedValue').textContent = animationSpeed.toFixed(1);
-    });
+    const speedSlider = document.getElementById('speedSlider');
+    if (speedSlider) {
+        speedSlider.addEventListener('input', function(e) {
+            animationSpeed = parseFloat(e.target.value);
+            document.getElementById('speedValue').textContent = animationSpeed.toFixed(1);
+            console.log('播放速度已更改:', animationSpeed);
+        });
+        console.log('速度滑块事件监听器已附加');
+    } else {
+        console.error('找不到速度滑块元素');
+    }
 
     // 加载ADSB数据
     loadADSBData().then(data => {

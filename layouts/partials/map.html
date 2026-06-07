@@ -50,11 +50,29 @@
         <div class="sidebar-section">
             <div class="sidebar-title">时间轴控制</div>
             <div class="timeline-control">
+                <!-- 日期信息 -->
+                <div class="date-info" id="dateInfo">
+                    <span class="date-label">数据日期:</span>
+                    <span class="date-value" id="dataDate">--</span>
+                </div>
+
+                <!-- 时间范围信息 -->
+                <div class="time-range-info" id="timeRangeInfo">
+                    <div class="range-row">
+                        <span>开始: <strong id="startTime">--:--</strong></span>
+                        <span>结束: <strong id="endTime">--:--</strong></span>
+                    </div>
+                    <div class="range-row">
+                        <span class="duration-label">数据时长: <strong id="dataDuration">--</strong></span>
+                    </div>
+                </div>
+
+                <!-- 时间滑块 -->
                 <div class="time-display">
                     <span id="currentTime">--:--:--</span>
-                    <span class="time-range" id="timeRange">加载中...</span>
                 </div>
                 <input type="range" id="timeSlider" min="0" max="100" step="0.1" value="0" disabled>
+
                 <div class="timeline-info">
                     <span>活跃航班: <strong id="activeFlightsCount">0</strong></span>
                     <span>总航班: <strong id="totalFlightsCount">0</strong></span>

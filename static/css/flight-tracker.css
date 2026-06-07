@@ -206,6 +206,22 @@ header .status-indicators {
     border-left-color: var(--accent-cyan);
 }
 
+.flight-item.selected {
+    background-color: rgba(59, 130, 246, 0.2);
+    border-left-color: var(--accent-blue);
+    border-left-width: 4px;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+
+.flight-item.selected .flight-code {
+    color: var(--accent-blue);
+}
+
+.flight-item.selected .flight-status.active {
+    background-color: rgba(59, 130, 246, 0.3);
+    color: var(--accent-blue);
+}
+
 .flight-item-header {
     display: flex;
     justify-content: space-between;
@@ -317,6 +333,55 @@ header .status-indicators {
     color: var(--accent-cyan);
 }
 
+/* 日期信息 */
+.date-info {
+    background-color: var(--bg-tertiary);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.date-label {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.date-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-blue);
+}
+
+/* 时间范围信息 */
+.time-range-info {
+    background-color: var(--bg-tertiary);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+}
+
+.range-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 6px;
+}
+
+.range-row:last-child {
+    margin-bottom: 0;
+}
+
+.range-row strong {
+    color: var(--accent-cyan);
+}
+
+.duration-label {
+    color: var(--text-muted);
+}
+
 /* 控制按钮 */
 .control-buttons {
     display: grid;
@@ -361,6 +426,7 @@ header .status-indicators {
 /* 速度滑块 */
 .speed-control {
     margin-top: 15px;
+    pointer-events: auto;
 }
 
 .speed-control label {
@@ -368,6 +434,7 @@ header .status-indicators {
     font-size: 13px;
     color: var(--text-muted);
     margin-bottom: 8px;
+    pointer-events: auto;
 }
 
 .speed-control input[type="range"] {
@@ -377,6 +444,9 @@ header .status-indicators {
     border-radius: 3px;
     outline: none;
     -webkit-appearance: none;
+    pointer-events: auto;
+    position: relative;
+    z-index: 1;
 }
 
 .speed-control input[type="range"]::-webkit-slider-thumb {
@@ -387,6 +457,35 @@ header .status-indicators {
     border-radius: 50%;
     cursor: pointer;
     box-shadow: 0 2px 6px var(--shadow);
+    margin-top: -6px; /* 居中对齐 */
+}
+
+.speed-control input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 6px var(--shadow);
+    border: none;
+}
+
+.speed-control input[type="range"]::-moz-range-track {
+    height: 6px;
+    background: var(--bg-tertiary);
+    border-radius: 3px;
+}
+
+.speed-control input[type="range"]:focus {
+    outline: none;
+}
+
+.speed-control input[type="range"]:focus::-webkit-slider-thumb {
+    box-shadow: 0 2px 10px rgba(59, 130, 246, 0.5);
+}
+
+.speed-control input[type="range"]:focus::-moz-range-thumb {
+    box-shadow: 0 2px 10px rgba(59, 130, 246, 0.5);
 }
 
 /* 侧边栏滚动条样式 */
