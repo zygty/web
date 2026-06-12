@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignment 4 | Academic Website and Aviation Map Showcase</title>
+    <meta name="description" content="Assignment 4 showcase: Hermes Research Workbench and an ADS-B aviation map system.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;800&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./showcase.css">
+    <script defer src="./showcase.js"></script>
+</head>
+<body class="lang-en">
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a class="brand" href="./en.html">
+                <span class="brand-mark">A4</span>
+                <span class="brand-copy">
+                    <span class="brand-kicker">Assignment 4 Showcase</span>
+                    <span class="brand-title">Academic Website and Aviation Map Showcase</span>
+                </span>
+            </a>
+            <div class="topbar-right">
+                <nav class="topnav">
+                    <a href="#overview">Overview</a>
+                    <a href="#academic">Academic Site</a>
+                    <a href="#aviation">Aviation Map</a>
+                    <a href="#summary">Summary</a>
+                    <a data-route="map" href="../map/">Open Map</a>
+                    <a data-route="home" href="../">Home</a>
+                </nav>
+                <div class="lang-switch" aria-label="Language switch">
+                    <a class="lang-pill" href="./index.html">中文</a>
+                    <a class="lang-pill is-active" href="./en.html">EN</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-shell">
+        <section class="hero">
+            <div class="hero-grid">
+                <article class="hero-copy panel" data-reveal>
+                    <span class="eyebrow">Academic Website · Aviation Map · Research Showcase</span>
+                    <h1>Two project types under one research theme</h1>
+                    <p class="lead">
+                        This page highlights two projects developed around aviation research. The first is
+                        <strong>Hermes Research Workbench</strong>, a workspace for reading papers, organizing evidence,
+                        building literature reviews, and supporting writing. The second is an
+                        <strong>aviation map system</strong> for ADS-B trajectory visualization, timeline playback, and future path prediction.
+                    </p>
+                    <div class="hero-actions">
+                        <a class="button button-primary" href="#academic">View Academic Site</a>
+                        <a class="button button-secondary" href="#aviation">View Aviation Map</a>
+                    </div>
+                </article>
+
+                <aside class="hero-preview panel" data-reveal>
+                    <div class="hero-preview-head">
+                        <h2>Two projects, one clear narrative</h2>
+                        <p>
+                            The page presents a research-support website and a data-driven aviation interface side by side, so the audience can quickly see their roles and relationship.
+                        </p>
+                    </div>
+                    <div class="preview-stack">
+                        <div class="preview-tile">
+                            <img src="../images/agent-story/academic-site-1.png" alt="Hermes Research Workbench interface">
+                            <span class="preview-label">Part 1 · Academic Site</span>
+                        </div>
+                        <div class="preview-tile">
+                            <img src="../images/agent-story/overview-map.svg" alt="Aviation map overview">
+                            <span class="preview-label">Part 2 · Aviation Map</span>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <section>
+            <div class="metric-grid">
+                <article class="metric-card" data-reveal>
+                    <div class="metric-label">Paper Library</div>
+                    <div class="metric-value">13</div>
+                    <div class="metric-note">The academic site structures research materials through a paper library, tags, and status filters.</div>
+                </article>
+                <article class="metric-card" data-reveal>
+                    <div class="metric-label">Research Chunks</div>
+                    <div class="metric-value">183</div>
+                    <div class="metric-note">Evidence is retrieved and previewed in chunk form for answers, summaries, and review generation.</div>
+                </article>
+                <article class="metric-card" data-reveal>
+                    <div class="metric-label">Sample Flights</div>
+                    <div class="metric-value">10</div>
+                    <div class="metric-note">The aviation interface uses curated sample flights for trajectory display, playback, and interaction.</div>
+                </article>
+                <article class="metric-card" data-reveal>
+                    <div class="metric-label">Prediction Horizon</div>
+                    <div class="metric-value">1-10</div>
+                    <div class="metric-note">The prediction module can overlay multiple future steps for a selected flight.</div>
+                </article>
+            </div>
+        </section>
+
+        <section id="overview">
+            <div class="section-head" data-reveal>
+                <h2>Project Overview</h2>
+                <p>
+                    This showcase places both projects in the same research context: one supports the research workflow, while the other turns aviation data into an interactive visual system.
+                </p>
+            </div>
+            <div class="project-grid">
+                <article class="project-card" data-reveal>
+                    <span class="pill pill-cyan">Research Workflow</span>
+                    <h3>Hermes Research Workbench</h3>
+                    <p>
+                        This is an academic research workspace. It brings literature search, source-grounded question answering, review writing, and draft support into a single interface.
+                    </p>
+                    <ul class="bullet-list">
+                        <li>The left panel manages search, filtering, and topic organization.</li>
+                        <li>The middle panel focuses on the currently selected paper.</li>
+                        <li>The right panel turns evidence into answers, reviews, and draft content.</li>
+                    </ul>
+                </article>
+                <article class="project-card" data-reveal>
+                    <span class="pill pill-teal">Interactive System</span>
+                    <h3>Aviation Map System</h3>
+                    <p>
+                        This is an interactive ADS-B map. It combines spatial trajectories, time-based playback, and future prediction in one audience-friendly interface.
+                    </p>
+                    <ul class="bullet-list">
+                        <li>The map displays flight paths, current positions, and coverage.</li>
+                        <li>The timeline enables playback, pause, scrubbing, and speed control.</li>
+                        <li>The prediction layer places estimated future trajectories back on the map.</li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+
+        <section id="academic">
+            <div class="section-head" data-reveal>
+                <h2>Part 1 · Academic Website</h2>
+                <p>
+                    The first part presents a research workflow platform. Its value comes from how it organizes papers, evidence, and writing tasks rather than from interface styling alone.
+                </p>
+            </div>
+            <div class="split-grid">
+                <div class="image-stack">
+                    <article class="image-card" data-reveal>
+                        <img src="../images/agent-story/academic-site-1.png" alt="Hermes Research Workbench main interface">
+                        <div class="image-caption">
+                            <h3>Main Interface</h3>
+                            <p>
+                                The layout clearly exposes the Literature Library, Selected Literature, Paper Snapshot, AI Research Assistant, and Literature Review modules.
+                            </p>
+                        </div>
+                    </article>
+                    <article class="image-card" data-reveal>
+                        <img src="../images/agent-story/academic-site-2.png" alt="Writing workflow and review area">
+                        <div class="image-caption">
+                            <h3>Writing Workflow</h3>
+                            <p>
+                                The right side extends into draft title, draft topic, draft focus, and export actions such as BibTeX and APA, showing a continuous path from reading to writing.
+                            </p>
+                        </div>
+                    </article>
+                </div>
+                <article class="panel panel-copy" data-reveal>
+                    <span class="pill pill-amber">Audience View</span>
+                    <h3>What this website is really showing</h3>
+                    <p>
+                        From the audience perspective, the site shows how research materials are organized, how evidence is surfaced, how literature reviews are built, and how draft writing is supported.
+                    </p>
+                    <p class="quote">
+                        It is not just a paper list. It is a research desk that connects reading, note-making, question answering, review synthesis, and writing support.
+                    </p>
+                    <div class="inline-note">
+                        Structurally, the left side finds sources, the center interprets a paper, and the right side converts source material into answers and writing output.
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section>
+            <div class="feature-grid">
+                <article class="feature-card" data-reveal>
+                    <span class="pill pill-cyan">Literature Management</span>
+                    <h3>Literature Library</h3>
+                    <p>Supports search by title, author, DOI, and tags, turning scattered papers into a reusable research asset base.</p>
+                </article>
+                <article class="feature-card" data-reveal>
+                    <span class="pill pill-teal">Structured Reading</span>
+                    <h3>Selected Literature</h3>
+                    <p>Combines title, year, tags, chunk count, and paper snapshot into one focused view for fast interpretation.</p>
+                </article>
+                <article class="feature-card" data-reveal>
+                    <span class="pill pill-amber">Grounded Evidence</span>
+                    <h3>AI Research Assistant</h3>
+                    <p>Uses retrieved source chunks to support grounded answers instead of unconstrained free-form generation.</p>
+                </article>
+                <article class="feature-card" data-reveal>
+                    <span class="pill pill-rose">Review Support</span>
+                    <h3>Literature Review</h3>
+                    <p>Builds review context from selected tags and paper limits, then turns distributed papers into usable review text.</p>
+                </article>
+                <article class="feature-card" data-reveal>
+                    <span class="pill pill-cyan">Writing Support</span>
+                    <h3>Writing Workflow</h3>
+                    <p>Organizes titles, topics, and research focus into draft-ready input, moving the interface beyond reading into writing support.</p>
+                </article>
+                <article class="feature-card" data-reveal>
+                    <span class="pill pill-teal">Import / Export</span>
+                    <h3>Workflow Chain</h3>
+                    <p>From importing PDFs to exporting BibTeX, APA, and workflow packs, the site reflects a full research workflow rather than a single task.</p>
+                </article>
+            </div>
+        </section>
+
+        <section id="aviation">
+            <div class="section-head" data-reveal>
+                <h2>Part 2 · Aviation Map System</h2>
+                <p>
+                    The second part presents an interactive interface built around ADS-B trajectories. Its value lies in how it combines geometry, time, and prediction into one coherent system.
+                </p>
+            </div>
+            <div class="split-grid">
+                <article class="image-card" data-reveal>
+                    <img src="../images/agent-story/overview-map.svg" alt="Aviation map trajectory overview">
+                    <div class="image-caption">
+                        <h3>Trajectory Overview</h3>
+                        <p>
+                            Multiple sample flights appear on the map at once, allowing the audience to read direction, coverage, and spatial distribution immediately.
+                        </p>
+                    </div>
+                </article>
+                <article class="panel panel-copy" data-reveal>
+                    <span class="pill pill-amber">System View</span>
+                    <h3>What this system is really showing</h3>
+                    <p>
+                        For the audience, the map demonstrates how trajectory visualization, timeline playback, status monitoring, and path prediction can live in one aviation-facing interface.
+                    </p>
+                    <p class="quote">
+                        Trajectories show where flights move, the timeline shows when they move, and prediction shows what might happen next.
+                    </p>
+                    <div class="inline-note">
+                        That is why this section works both as a map-based visualization and as a coherent, explainable system demo.
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section>
+            <div class="timeline-grid">
+                <article class="timeline-card" data-reveal>
+                    <span class="pill pill-cyan">Module 01</span>
+                    <h3>Trajectory Data Layer</h3>
+                    <p>Each point carries latitude, longitude, altitude, speed, heading, and timestamp, which together define the path and its temporal behavior.</p>
+                </article>
+                <article class="timeline-card" data-reveal>
+                    <span class="pill pill-teal">Module 02</span>
+                    <h3>Map and Time Interaction</h3>
+                    <p>The timeline and playback controls give the system a sense of process, allowing the audience to watch the airspace evolve over time.</p>
+                </article>
+                <article class="timeline-card" data-reveal>
+                    <span class="pill pill-amber">Module 03</span>
+                    <h3>Prediction Layer</h3>
+                    <p>For a selected flight, the system overlays several future steps, extending the interface from historical playback to forward estimation.</p>
+                </article>
+                <article class="timeline-card" data-reveal>
+                    <span class="pill pill-rose">Module 04</span>
+                    <h3>Status Panel</h3>
+                    <p>Active flight count, time window, trajectory point count, and control buttons help viewers understand the interface without reading code.</p>
+                </article>
+            </div>
+        </section>
+
+        <section>
+            <div class="feature-grid">
+                <article class="feature-card" data-reveal>
+                    <span class="pill pill-cyan">Visualization</span>
+                    <h3>Dynamic Flight Paths</h3>
+                    <p>Historical paths are drawn as lines and current positions are emphasized, making direction and distribution easy to compare.</p>
+                </article>
+                <article class="feature-card" data-reveal>
+                    <span class="pill pill-teal">Playback</span>
+                    <h3>Timeline Control</h3>
+                    <p>Scrubbing, play, pause, and speed changes turn a set of trajectory points into a readable time-based narrative.</p>
+                </article>
+                <article class="feature-card" data-reveal>
+                    <span class="pill pill-amber">Prediction</span>
+                    <h3>Future Path Overlay</h3>
+                    <p>Predicted motion returns directly to the map, so viewers can compare history and estimated continuation in the same view.</p>
+                </article>
+                <article class="feature-card" data-reveal>
+                    <span class="pill pill-rose">Monitoring</span>
+                    <h3>Status Interpretation</h3>
+                    <p>Flight counts, point counts, and time bounds make the page feel like a system dashboard rather than a standalone visualization image.</p>
+                </article>
+                <article class="feature-card" data-reveal>
+                    <span class="pill pill-cyan">Base Maps</span>
+                    <h3>Multiple Geographic Contexts</h3>
+                    <p>Dark, terrain, and satellite contexts let the same trajectory set be interpreted differently depending on the presentation goal.</p>
+                </article>
+                <article class="feature-card" data-reveal>
+                    <span class="pill pill-teal">Scalability</span>
+                    <h3>Foundation for Extension</h3>
+                    <p>The interface leaves clear room for live streams, heatmaps, airport analysis, and anomaly detection in later iterations.</p>
+                </article>
+            </div>
+        </section>
+
+        <section>
+            <div class="split-grid">
+                <article class="image-card" data-reveal>
+                    <img src="../images/agent-story/prediction-map.svg" alt="Predicted trajectory overlay illustration">
+                    <div class="image-caption">
+                        <h3>Future Trajectory Presentation</h3>
+                        <p>
+                            The prediction module overlays future points on top of historical motion, letting the audience compare what has happened with what may happen next.
+                        </p>
+                    </div>
+                </article>
+                <article class="panel panel-copy" data-reveal>
+                    <span class="pill pill-rose">Why It Works</span>
+                    <h3>Why this section is presentation-friendly</h3>
+                    <p>
+                        Compared with plain text or tables, a map can express direction, density, timing, and model output in a much more immediate way, which makes it highly effective for demonstrations.
+                    </p>
+                    <ul class="bullet-list">
+                        <li>It reveals spatial patterns instead of only numeric values.</li>
+                        <li>It replays temporal change instead of only static outcomes.</li>
+                        <li>It visualizes prediction instead of leaving it hidden in the backend.</li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+
+        <section id="summary">
+            <div class="section-head" data-reveal>
+                <h2>How the two projects relate</h2>
+                <p>
+                    One is oriented toward research preparation, the other toward system presentation. Together they show how an aviation theme can be organized, interpreted, and communicated.
+                </p>
+            </div>
+            <div class="summary-grid">
+                <article class="summary-card" data-reveal>
+                    <span class="pill pill-cyan">Project Role</span>
+                    <h3>Academic Website</h3>
+                    <p>It organizes papers, evidence, reviews, and writing tasks, acting as a structured research workspace.</p>
+                </article>
+                <article class="summary-card" data-reveal>
+                    <span class="pill pill-teal">Project Role</span>
+                    <h3>Aviation Map</h3>
+                    <p>It visualizes trajectories, replays time, and overlays prediction, acting as an interactive flight-data interface.</p>
+                </article>
+                <article class="summary-card" data-reveal>
+                    <span class="pill pill-amber">Combined Value</span>
+                    <h3>Why they belong in one report</h3>
+                    <p>Together they frame the same aviation topic from two complementary angles: research support and system-level presentation.</p>
+                </article>
+            </div>
+        </section>
+
+        <section>
+            <article class="closing-card" data-reveal>
+                <span class="pill pill-rose">Closing Note</span>
+                <h3>One-sentence takeaway</h3>
+                <p>
+                    This showcase has two parts: an academic workspace called
+                    <strong>Hermes Research Workbench</strong> for evidence-based reading and writing support, and an
+                    <strong>aviation map system</strong> for ADS-B trajectory visualization, playback, and prediction. One emphasizes research workflow, the other emphasizes interactive system presentation.
+                </p>
+            </article>
+        </section>
+    </main>
+
+    <footer class="page-shell footer">
+        Assignment 4 · English showcase page
+    </footer>
+</body>
+</html>

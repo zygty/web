@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="planeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3498db;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2c3e50;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="trailGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3498db;stop-opacity:0" />
+      <stop offset="100%" style="stop-color:#3498db;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- 背景圆形 -->
+  <circle cx="32" cy="32" r="30" fill="#ecf0f1" stroke="#3498db" stroke-width="2"/>
+
+  <!-- 轨迹线 -->
+  <path d="M10 45 Q32 20 54 45" stroke="url(#trailGradient)" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+  <!-- 飞机主体 -->
+  <g transform="translate(32, 32)">
+    <!-- 机身 -->
+    <ellipse cx="0" cy="0" rx="12" ry="3" fill="url(#planeGradient)" transform="rotate(-30)"/>
+
+    <!-- 机翼 -->
+    <path d="M-3 1 L3 1 L4 -2 L-4 -2 Z" fill="#3498db" transform="rotate(-30)"/>
+
+    <!-- 尾翼 -->
+    <path d="M-8 0 L-12 -2 L-12 2 Z" fill="#2c3e50" transform="rotate(-30)"/>
+
+    <!-- 机头 -->
+    <circle cx="12" cy="0" r="1.5" fill="#e74c3c" transform="rotate(-30)"/>
+
+    <!-- 窗户 -->
+    <circle cx="-6" cy="0" r="0.8" fill="#ecf0f1" transform="rotate(-30)"/>
+    <circle cx="-2" cy="0" r="0.8" fill="#ecf0f1" transform="rotate(-30)"/>
+    <circle cx="2" cy="0" r="0.8" fill="#ecf0f1" transform="rotate(-30)"/>
+  </g>
+
+  <!-- 数据点 -->
+  <circle cx="10" cy="45" r="2" fill="#e74c3c"/>
+  <circle cx="32" cy="32" r="2" fill="#3498db"/>
+  <circle cx="54" cy="45" r="2" fill="#3498db"/>
+</svg>

@@ -12,12 +12,11 @@ This is a real-time trajectory display platform based on aviation ADSB data. You
 - [Assignment 1]({{< ref "Assignment1.md" >}}) - The first assignment
 - [Assignment 2]({{< ref "Assignment2.md" >}}) - The second assignment
 - [Assignment 3]({{< ref "Assignment3.md" >}}) - The third assignment
-- [Assignment 4]({{< ref "Assignment4.md" >}}) - The forth assignment
+- [Assignment 4](assignment4/) - Project showcase page
 
 ## function
 
 - [Map]({{< ref "map.md" >}}) - Real-time Flight Trajectory Monitoring System
-- [Agent Story](agent-story.html) - How agent and AI tools built the aviation map
 
 ---
 

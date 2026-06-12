@@ -39,7 +39,7 @@ fi
 # 启动Hugo Web服务器
 echo "🌐 Starting Hugo Web Server (port 1313)..."
 cd /Users/liziqi/Desktop/web
-hugo server > /tmp/hugo_server.log 2>&1 &
+hugo server --baseURL=http://localhost:1313/ > /tmp/hugo_server.log 2>&1 &
 HUGO_PID=$!
 echo "✅ Hugo Server started (PID: $HUGO_PID)"
 echo ""
@@ -58,8 +58,10 @@ echo "🎉 All servers started successfully!"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "📍 Access URLs:"
-echo "  • Main Page:  http://localhost:1313/web/"
-echo "  • Map Page:   http://localhost:1313/web/map/"
+echo "  • Main Page:  http://localhost:1313/"
+echo "  • Assignment 4 (ZH): http://localhost:1313/assignment4/"
+echo "  • Assignment 4 (EN): http://localhost:1313/assignment4/en.html"
+echo "  • Map Page:   http://localhost:1313/map/"
 echo "  • API Health: http://localhost:5001/health"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""

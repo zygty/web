@@ -17,7 +17,11 @@
                 </li>
             {{ else }}
                 <li class="sidebar-item">
-                    <a href="{{ .url | relURL }}" class="sidebar-link{{ if eq $currentPage.RelPermalink (.url | relURL) }} active{{ end }}">{{ .title }}</a>
+                    {{ $target := .url | relURL }}
+                    {{ if eq .url "/" }}
+                        {{ $target = $.Site.BaseURL }}
+                    {{ end }}
+                    <a href="{{ $target }}" class="sidebar-link{{ if eq $currentPage.RelPermalink $target }} active{{ end }}">{{ .title }}</a>
                 </li>
             {{ end }}
         {{ end }}

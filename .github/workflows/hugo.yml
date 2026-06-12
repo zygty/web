@@ -34,7 +34,7 @@ jobs:
           sudo dpkg -i ${{ runner.temp }}/hugo.deb
 
       - name: Build
-        run: hugo --minify
+        run: hugo --minify --baseURL https://zygty.github.io/web/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
