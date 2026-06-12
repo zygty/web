@@ -21,6 +21,7 @@ cd /Users/liziqi/Desktop/web
 #### Terminal 1 - 启动API服务器
 ```bash
 cd /Users/liziqi/Desktop/web/model_training
+MODEL_DIR=/Users/liziqi/Desktop/web/adsb_server_output/model \
 python3 flight_prediction_api.py
 ```
 
@@ -36,8 +37,10 @@ hugo server
 
 启动成功后，访问以下地址：
 
-- **主页**: http://localhost:1313/web/
-- **航空地图**: http://localhost:1313/web/map/
+- **主页**: http://localhost:1313/
+- **Assignment 4（中文）**: http://localhost:1313/assignment4/
+- **Assignment 4（English）**: http://localhost:1313/assignment4/en.html
+- **航空地图**: http://localhost:1313/map/
 - **API健康检查**: http://localhost:5001/health
 
 ---
@@ -95,7 +98,9 @@ pkill -f "hugo server"
 ### 1. Flask API服务器 (端口 5001)
 - **文件**: `model_training/flight_prediction_api.py`
 - **功能**: 航迹预测API
-- **模型**: `model_training/best_model.pth`
+- **当前优先模型目录**: `adsb_server_output/model/`
+- **模型文件**: `adsb_server_output/model/best_model.pth`
+- **标准化参数**: `adsb_server_output/model/norm_params.json`
 - **端点**:
   - `/health` - 健康检查
   - `/api/predict` - 单航班预测
@@ -124,7 +129,7 @@ kill -9 <PID>
 
 ### API服务器启动失败
 - 检查PyTorch是否安装：`python3 -c "import torch"`
-- 检查模型文件是否存在：`ls model_training/best_model.pth`
+- 检查模型文件是否存在：`ls adsb_server_output/model/best_model.pth`
 - 查看日志：`cat /tmp/api_server.log`
 
 ### Hugo服务器启动失败
@@ -216,7 +221,8 @@ curl -X POST http://localhost:5001/api/predict \
 
 ### 修改配置
 - **Hugo配置**: 编辑 `hugo.toml`
-- **API端口**: 编辑 `model_training/flight_prediction_api.py` (最后一行)
+- **API端口**: 通过环境变量设置，例如 `API_PORT=5002 python3 flight_prediction_api.py`
+- **模型目录**: 通过环境变量设置，例如 `MODEL_DIR=/Users/liziqi/Desktop/web/adsb_server_output/model python3 flight_prediction_api.py`
 - **预测参数**: 编辑 `model_training/flight_prediction_api.py` (model配置)
 
 ---

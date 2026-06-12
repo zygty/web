@@ -14,7 +14,7 @@
 <body class="lang-en">
     <header class="topbar">
         <div class="topbar-inner">
-            <a class="brand" href="./en.html">
+            <a class="brand" href="./index.html">
                 <span class="brand-mark">A4</span>
                 <span class="brand-copy">
                     <span class="brand-kicker">Assignment 4 Showcase</span>
@@ -31,8 +31,8 @@
                     <a data-route="home" href="../">Home</a>
                 </nav>
                 <div class="lang-switch" aria-label="Language switch">
-                    <a class="lang-pill" href="./index.html">中文</a>
-                    <a class="lang-pill is-active" href="./en.html">EN</a>
+                    <a class="lang-pill" href="./zh.html">中文</a>
+                    <a class="lang-pill is-active" href="./index.html">EN</a>
                 </div>
             </div>
         </div>
@@ -69,7 +69,7 @@
                             <span class="preview-label">Part 1 · Academic Site</span>
                         </div>
                         <div class="preview-tile">
-                            <img src="../images/agent-story/overview-map.svg" alt="Aviation map overview">
+                            <img src="../images/agent-story/aviation-map-real.png" alt="Real aviation map website screenshot">
                             <span class="preview-label">Part 2 · Aviation Map</span>
                         </div>
                     </div>
@@ -90,14 +90,14 @@
                     <div class="metric-note">Evidence is retrieved and previewed in chunk form for answers, summaries, and review generation.</div>
                 </article>
                 <article class="metric-card" data-reveal>
-                    <div class="metric-label">Sample Flights</div>
-                    <div class="metric-value">10</div>
-                    <div class="metric-note">The aviation interface uses curated sample flights for trajectory display, playback, and interaction.</div>
+                    <div class="metric-label">Active Flights</div>
+                    <div class="metric-value">100</div>
+                    <div class="metric-note">The current website view loads 100 cleaned ADS-B flights for map display and interaction.</div>
                 </article>
                 <article class="metric-card" data-reveal>
-                    <div class="metric-label">Prediction Horizon</div>
-                    <div class="metric-value">1-10</div>
-                    <div class="metric-note">The prediction module can overlay multiple future steps for a selected flight.</div>
+                    <div class="metric-label">Trajectory Points</div>
+                    <div class="metric-value">10,912</div>
+                    <div class="metric-note">Those cleaned flights currently contain 10,912 trajectory points in the visualization layer.</div>
                 </article>
             </div>
         </section>
@@ -224,15 +224,17 @@
                 </p>
             </div>
             <div class="split-grid">
-                <article class="image-card" data-reveal>
-                    <img src="../images/agent-story/overview-map.svg" alt="Aviation map trajectory overview">
-                    <div class="image-caption">
-                        <h3>Trajectory Overview</h3>
-                        <p>
-                            Multiple sample flights appear on the map at once, allowing the audience to read direction, coverage, and spatial distribution immediately.
-                        </p>
-                    </div>
-                </article>
+                <div class="image-stack">
+                    <article class="image-card" data-reveal>
+                        <img src="../images/agent-story/aviation-map-real.png" alt="Real aviation map website screenshot">
+                        <div class="image-caption">
+                            <h3>Real Website View</h3>
+                            <p>
+                                This is the actual aviation map interface from the website: the left column contains Data Status, Flight List, and Timeline Control, while the main map shows flight distribution on a dark basemap.
+                            </p>
+                        </div>
+                    </article>
+                </div>
                 <article class="panel panel-copy" data-reveal>
                     <span class="pill pill-amber">System View</span>
                     <h3>What this system is really showing</h3>
@@ -243,7 +245,7 @@
                         Trajectories show where flights move, the timeline shows when they move, and prediction shows what might happen next.
                     </p>
                     <div class="inline-note">
-                        That is why this section works both as a map-based visualization and as a coherent, explainable system demo.
+                        The current main interface shows 100 cleaned flights and 10,912 trajectory points, so this section reflects the real website state rather than a simplified sample view.
                     </div>
                 </article>
             </div>
@@ -312,11 +314,11 @@
         <section>
             <div class="split-grid">
                 <article class="image-card" data-reveal>
-                    <img src="../images/agent-story/prediction-map.svg" alt="Predicted trajectory overlay illustration">
+                    <img src="../images/agent-story/prediction-real.png" alt="Real trajectory prediction screenshot from the aviation map">
                     <div class="image-caption">
-                        <h3>Future Trajectory Presentation</h3>
+                        <h3>Real Prediction Interface</h3>
                         <p>
-                            The prediction module overlays future points on top of historical motion, letting the audience compare what has happened with what may happen next.
+                            This screenshot shows the actual prediction workflow in the website: the left-side prediction panel controls the selected flight and prediction steps, while the map overlays the future path with orange dashed segments and forecast markers.
                         </p>
                     </div>
                 </article>
@@ -324,12 +326,12 @@
                     <span class="pill pill-rose">Why It Works</span>
                     <h3>Why this section is presentation-friendly</h3>
                     <p>
-                        Compared with plain text or tables, a map can express direction, density, timing, and model output in a much more immediate way, which makes it highly effective for demonstrations.
+                        Compared with plain text or tables, this view makes it immediately clear how the system predicts the next segment of a selected flight and returns that result to the live map interface.
                     </p>
                     <ul class="bullet-list">
                         <li>It reveals spatial patterns instead of only numeric values.</li>
                         <li>It replays temporal change instead of only static outcomes.</li>
-                        <li>It visualizes prediction instead of leaving it hidden in the backend.</li>
+                        <li>It visualizes prediction directly on top of the operational map instead of leaving it hidden in the backend.</li>
                     </ul>
                 </article>
             </div>

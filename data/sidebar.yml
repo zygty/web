@@ -1,7 +1,7 @@
-- title: 导航
+- title: Home
   url: /
 
-- title: 课程作业
+- title: Assignments
   pages:
     - title: Assignment 1
       url: assignment1/
@@ -12,7 +12,7 @@
     - title: Assignment 4
       url: assignment4/
 
-- title: 功能展示
+- title: Features
   pages:
-    - title: 航空地图
+    - title: Aviation Map
       url: map/

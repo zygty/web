@@ -30,6 +30,7 @@ let activeFlights = new Set(); // Currently active flights
 let predictionPolylines = {}; // Predicted trajectory lines
 let selectedFlightId = null;  // Currently selected flight for prediction
 let predictionSteps = 5;     // Number of prediction steps
+const PREDICTION_SEQUENCE_LENGTH = 10;
 
 // ==================== ADSB Data Loading ====================
 /**
@@ -697,6 +698,51 @@ function getCurrentPointIndex(flight, targetTime) {
     return closestIndex;
 }
 
+/**
+ * Build prediction context based on the current timeline position instead of the full route end.
+ * This ensures "Predict Selected" forecasts from the aircraft's currently displayed position.
+ */
+function getPredictionContext(flight, targetTime) {
+    if (!flight || !flight.route || flight.route.length === 0) {
+        return null;
+    }
+
+    const currentPointIndex = getCurrentPointIndex(flight, targetTime);
+    if (currentPointIndex < 0) {
+        return null;
+    }
+
+    const currentPoint = flight.route[currentPointIndex];
+    const timeDiff = Math.abs(currentPoint.timestamp - targetTime);
+
+    // Keep prediction aligned with flights that are actually active on the current timeline.
+    if (timeDiff >= 300000) {
+        return null;
+    }
+
+    const startIndex = Math.max(0, currentPointIndex - PREDICTION_SEQUENCE_LENGTH + 1);
+    const observedRoute = flight.route.slice(startIndex, currentPointIndex + 1);
+
+    const intervals = [];
+    for (let i = 1; i < observedRoute.length; i++) {
+        const deltaSeconds = (observedRoute[i].timestamp - observedRoute[i - 1].timestamp) / 1000;
+        if (deltaSeconds > 0) {
+            intervals.push(deltaSeconds);
+        }
+    }
+
+    const averageIntervalSeconds = intervals.length > 0
+        ? intervals.reduce((sum, value) => sum + value, 0) / intervals.length
+        : 30;
+
+    return {
+        currentPointIndex,
+        currentPoint,
+        observedRoute,
+        averageIntervalSeconds
+    };
+}
+
 // ==================== Animation Control ====================
 /**
  * Play/pause animation
@@ -868,9 +914,15 @@ async function predictTrajectory() {
         return;
     }
 
-    // Need at least 10 trajectory points for prediction
-    if (flightData.route.length < 10) {
-        alert(`Flight ${selectedFlightId} has insufficient trajectory points (${flightData.route.length} < 10 required)`);
+    const predictionContext = getPredictionContext(flightData, currentTime);
+    if (!predictionContext) {
+        alert(`Flight ${selectedFlightId} is not active near the current timeline position, so it cannot be predicted right now`);
+        return;
+    }
+
+    // Need at least 10 trajectory points immediately before the current timeline position.
+    if (predictionContext.observedRoute.length < PREDICTION_SEQUENCE_LENGTH) {
+        alert(`Flight ${selectedFlightId} only has ${predictionContext.observedRoute.length} historical points at the current timeline position. Move the timeline later in this flight and try again once at least ${PREDICTION_SEQUENCE_LENGTH} points are available.`);
         return;
     }
 
@@ -879,8 +931,8 @@ async function predictTrajectory() {
     predictBtn.innerHTML = '<span>⏳</span><span>Predicting...</span>';
 
     try {
-        // Prepare trajectory data for API (last 10 points)
-        const trajectory = flightData.route.slice(-10).map(point => ({
+        // Prepare trajectory data for API using the points leading up to the current timeline position.
+        const trajectory = predictionContext.observedRoute.map(point => ({
             lat: point.lat,
             lng: point.lng,
             altitude: point.altitude,
@@ -890,6 +942,7 @@ async function predictTrajectory() {
 
         console.log('Sending prediction request for flight:', selectedFlightId);
         console.log('Trajectory points:', trajectory.length);
+        console.log('Prediction current point:', predictionContext.currentPoint);
 
         const response = await fetch('http://localhost:5001/api/predict', {
             method: 'POST',
@@ -910,7 +963,7 @@ async function predictTrajectory() {
         console.log('Prediction result:', result);
 
         if (result.predictions && result.predictions.length > 0) {
-            displayPredictedTrajectory(selectedFlightId, result.predictions, flightData.route);
+            displayPredictedTrajectory(selectedFlightId, result.predictions, predictionContext);
             alert(`Successfully predicted ${result.predictions.length} future points for flight ${selectedFlightId}`);
         } else {
             throw new Error('No predictions returned');
@@ -928,7 +981,7 @@ async function predictTrajectory() {
 /**
  * Display predicted trajectory on map
  */
-function displayPredictedTrajectory(flightId, predictions, historicalRoute) {
+function displayPredictedTrajectory(flightId, predictions, predictionContext) {
     // Remove old prediction if exists
     if (predictionPolylines[flightId]) {
         // Remove polyline
@@ -949,12 +1002,13 @@ function displayPredictedTrajectory(flightId, predictions, historicalRoute) {
         markers: []
     };
 
-    // Get last known position
-    const lastPoint = historicalRoute[historicalRoute.length - 1];
+    const currentPoint = predictionContext.currentPoint;
+    const observedRoute = predictionContext.observedRoute;
+    const intervalSeconds = predictionContext.averageIntervalSeconds;
 
-    // Build predicted path from last position through predictions
+    // Build predicted path from the current visible position through predictions.
     const predictedPath = [
-        [lastPoint.lat, lastPoint.lng],
+        [currentPoint.lat, currentPoint.lng],
         ...predictions.map(p => [p.lat, p.lng])
     ];
 
@@ -981,7 +1035,7 @@ function displayPredictedTrajectory(flightId, predictions, historicalRoute) {
         }).addTo(map);
 
         // Add popup with prediction info
-        const timeOffset = index * 30; // Assuming 30-second intervals
+        const timeOffset = Math.round((index + 1) * intervalSeconds);
         marker.bindPopup(`
             <div style="font-size: 12px;">
                 <strong>Prediction Point ${index + 1}</strong><br>
@@ -996,12 +1050,12 @@ function displayPredictedTrajectory(flightId, predictions, historicalRoute) {
         predictionPolylines[flightId].markers.push(marker);
     });
 
-    // Fit map to show both historical and predicted paths
-    const group = L.featureGroup([
-        flightPolylines[flightId],
-        predictionLine
+    // Keep the view focused on the currently observed segment plus the predicted continuation.
+    const localBounds = L.latLngBounds([
+        ...observedRoute.map(point => [point.lat, point.lng]),
+        ...predictedPath
     ]);
-    map.fitBounds(group.getBounds(), { padding: [50, 50] });
+    map.fitBounds(localBounds, { padding: [50, 50] });
 }
 
 /**

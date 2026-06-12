@@ -10,6 +10,7 @@ import json
 import numpy as np
 import logging
 import os
+from pathlib import Path
 
 # PyTorch导入
 try:
@@ -31,10 +32,16 @@ CORS(app)
 model = None
 norm_params = None
 sequence_length = 10
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda' if PYTORCH_AVAILABLE and torch.cuda.is_available() else 'cpu')
+loaded_model_dir = None
+loaded_model_path = None
+loaded_norm_params_path = None
 
-# 设置基础目录为model_training文件夹
-BASE_DIR = '/Users/liziqi/Desktop/web/model_training'
+# 路径配置
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_ROOT = SCRIPT_DIR.parent
+DEFAULT_MODEL_DIR = REPO_ROOT / 'adsb_server_output' / 'model'
+FALLBACK_MODEL_DIR = SCRIPT_DIR
 
 
 class FlightLSTM(nn.Module):
@@ -59,20 +66,50 @@ class FlightLSTM(nn.Module):
         return out
 
 
+def resolve_model_dir():
+    """解析应该加载的模型目录，优先使用服务器同步回来的模型。"""
+    candidates = []
+
+    env_model_dir = os.getenv('MODEL_DIR')
+    if env_model_dir:
+        candidates.append(Path(env_model_dir).expanduser().resolve())
+
+    candidates.extend([
+        DEFAULT_MODEL_DIR.resolve(),
+        FALLBACK_MODEL_DIR.resolve(),
+    ])
+
+    checked = []
+    for candidate in candidates:
+        if candidate in checked:
+            continue
+        checked.append(candidate)
+
+        model_path = candidate / 'best_model.pth'
+        norm_params_path = candidate / 'norm_params.json'
+
+        if model_path.exists() and norm_params_path.exists():
+            return candidate
+
+    logger.warning("未找到完整模型目录，已检查: %s", ", ".join(str(path) for path in checked))
+    return None
+
+
 def load_model():
     """加载训练好的模型"""
     global model, norm_params, sequence_length
+    global loaded_model_dir, loaded_model_path, loaded_norm_params_path
 
-    model_path = os.path.join(BASE_DIR, 'best_model.pth')
-    norm_params_path = os.path.join(BASE_DIR, 'norm_params.json')
-
-    if not os.path.exists(model_path):
-        logger.warning(f"模型文件不存在: {model_path}")
+    if not PYTORCH_AVAILABLE:
+        logger.error("PyTorch 不可用，无法加载模型")
         return False
 
-    if not os.path.exists(norm_params_path):
-        logger.warning(f"标准化参数文件不存在: {norm_params_path}")
+    model_dir = resolve_model_dir()
+    if model_dir is None:
         return False
+
+    model_path = model_dir / 'best_model.pth'
+    norm_params_path = model_dir / 'norm_params.json'
 
     try:
         with open(norm_params_path, 'r') as f:
@@ -94,8 +131,12 @@ def load_model():
         model.eval()
 
         sequence_length = checkpoint['sequence_length']
+        loaded_model_dir = str(model_dir)
+        loaded_model_path = str(model_path)
+        loaded_norm_params_path = str(norm_params_path)
 
         logger.info(f"模型加载成功，使用设备: {device}")
+        logger.info(f"当前模型目录: {loaded_model_dir}")
         return True
 
     except Exception as e:
@@ -109,7 +150,10 @@ def health_check():
     return jsonify({
         'status': 'healthy',
         'model_loaded': model is not None,
-        'device': str(device)
+        'device': str(device),
+        'model_dir': loaded_model_dir,
+        'model_path': loaded_model_path,
+        'norm_params_path': loaded_norm_params_path,
     })
 
 
@@ -250,8 +294,12 @@ def predict_batch():
 
 if __name__ == '__main__':
     if load_model():
+        api_host = os.getenv('API_HOST', '0.0.0.0')
+        api_port = int(os.getenv('API_PORT', '5001'))
+        debug_mode = os.getenv('FLASK_DEBUG', '0') == '1'
+
         logger.info("启动预测API服务器...")
-        logger.info("服务器将在 http://localhost:5001 上运行")
-        app.run(host='0.0.0.0', port=5001, debug=True)
+        logger.info(f"服务器将在 http://localhost:{api_port} 上运行")
+        app.run(host=api_host, port=api_port, debug=debug_mode, use_reloader=False)
     else:
         logger.error("无法启动服务器：模型加载失败")
