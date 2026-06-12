@@ -16,3 +16,5 @@
   pages:
     - title: 航空地图
       url: map
+    - title: Agent讲解页
+      url: agent-story.html

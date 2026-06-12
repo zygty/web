@@ -1,35 +1,40 @@
 /**
- * 航空轨迹监控系统 - 时间轴版本
+ * Flight Trajectory Monitoring System - Timeline Version
  *
- * 功能：
- * - 地图初始化和管理
- * - 按时间轴显示航班轨迹
- * - 时间轴播放控制
- * - ADSB数据加载和显示
+ * Features:
+ * - Map initialization and management
+ * - Display flight trajectories by timeline
+ * - Timeline playback control
+ * - ADSB data loading and display
  */
 
-// ==================== 全局变量 ====================
+// ==================== Global Variables ====================
 let map;
 let isPlaying = false;
 let animationSpeed = 1.0;
 let animationId = null;
 
-// 时间轴相关
-let currentTime = 0;  // 当前时间（毫秒时间戳）
-let timeMin = 0;      // 时间范围最小值
-let timeMax = 0;      // 时间范围最大值
-let timeRange = 0;    // 时间范围跨度
+// Timeline related
+let currentTime = 0;  // Current time (millisecond timestamp)
+let timeMin = 0;      // Time range minimum value
+let timeMax = 0;      // Time range maximum value
+let timeRange = 0;    // Time range span
 
-// 航班数据
-let allFlightsData = [];     // 所有航班数据
-let flightMarkers = {};      // 航班标记
-let flightPolylines = {};    // 航班轨迹线
-let activeFlights = new Set(); // 当前时间活跃的航班
+// Flight data
+let allFlightsData = [];     // All flight data
+let flightMarkers = {};      // Flight markers
+let flightPolylines = {};    // Flight trajectory lines
+let activeFlights = new Set(); // Currently active flights
 
-// ==================== ADSB数据加载 ====================
+// Prediction related
+let predictionPolylines = {}; // Predicted trajectory lines
+let selectedFlightId = null;  // Currently selected flight for prediction
+let predictionSteps = 5;     // Number of prediction steps
+
+// ==================== ADSB Data Loading ====================
 /**
- * 去重航班数据
- * 如果有重复的callsign，保留轨迹点更多的航班
+ * Deduplicate flight data
+ * If there are duplicate callsigns, keep the flight with more trajectory points
  */
 function deduplicateFlights(flights) {
     const flightMap = new Map();
@@ -40,41 +45,41 @@ function deduplicateFlights(flights) {
         const existing = flightMap.get(callsign);
 
         if (!existing) {
-            // 第一次遇到这个航班号，直接保存
+            // First time encountering this flight number, save directly
             flightMap.set(callsign, flight);
         } else {
-            // 遇到重复航班号，比较轨迹点数量
+            // Encountered duplicate flight number, compare trajectory point count
             duplicateCount++;
             if (flight.route.length > existing.route.length) {
-                // 新航班的轨迹点更多，替换
+                // New flight has more trajectory points, replace
                 flightMap.set(callsign, flight);
-                console.log(`替换航班 ${callsign}: ${existing.route.length} -> ${flight.route.length} 个轨迹点`);
+                console.log(`Replaced flight ${callsign}: ${existing.route.length} -> ${flight.route.length} trajectory points`);
             } else {
-                console.log(`跳过重复航班 ${callsign}: 保留 ${existing.route.length} 个轨迹点的版本`);
+                console.log(`Skipped duplicate flight ${callsign}: keeping version with ${existing.route.length} trajectory points`);
             }
         }
     });
 
     const uniqueFlights = Array.from(flightMap.values());
-    console.log(`去重完成: ${flights.length} -> ${uniqueFlights.length} (移除 ${duplicateCount} 个重复)`);
+    console.log(`Deduplication complete: ${flights.length} -> ${uniqueFlights.length} (removed ${duplicateCount} duplicates)`);
 
     return uniqueFlights;
 }
 
 /**
- * 加载ADSB数据
+ * Load ADSB data
  */
 async function loadADSBData() {
     try {
-        console.log('正在加载ADSB数据...');
-        // 使用 window.location.pathname 获取当前路径前缀
+        console.log('Loading ADSB data...');
+        // Use window.location.pathname to get current path prefix
         const pathPrefix = window.location.pathname.replace(/\/$/, '').replace(/\/map$/, '');
         const response = await fetch(`${pathPrefix}/data/adsb_flights_combined_simplified.json`);
         const rawData = await response.json();
 
-        console.log(`数据加载成功: ${rawData.metadata?.total_flights || 0} 个航班`);
+        console.log(`Data loaded successfully: ${rawData.metadata?.total_flights || 0} flights`);
 
-        // 转换数据格式
+        // Convert data format
         const flights = rawData.flights.map(flightData => {
             return {
                 flight_id: flightData.callsign,
@@ -88,30 +93,30 @@ async function loadADSBData() {
                     altitude: point.altitude,
                     timestamp: point.timestamp,
                     speed: point.speed,
-                    heading: point.heading || 0  // 默认航向为0
+                    heading: point.heading || 0  // Default heading to 0
                 }))
             };
         });
 
-        // 去重处理
+        // Deduplication
         const uniqueFlights = deduplicateFlights(flights);
 
-        console.log(`数据处理完成: ${uniqueFlights.length} 个唯一航班`);
+        console.log(`Data processing complete: ${uniqueFlights.length} unique flights`);
         return uniqueFlights;
 
     } catch (error) {
-        console.error('加载ADSB数据失败:', error);
+        console.error('Failed to load ADSB data:', error);
         return [];
     }
 }
 
-// ==================== 地图初始化 ====================
+// ==================== Map Initialization ====================
 
 /**
- * 显示加载指示器
- * @param {string} text - 加载文本
+ * Show loading indicator
+ * @param {string} text - Loading text
  */
-function showLoadingIndicator(text = '正在加载...') {
+function showLoadingIndicator(text = 'Loading...') {
     const indicator = document.getElementById('mapLoadingIndicator');
     if (indicator) {
         indicator.querySelector('.loading-text').textContent = text;
@@ -120,7 +125,7 @@ function showLoadingIndicator(text = '正在加载...') {
 }
 
 /**
- * 隐藏加载指示器
+ * Hide loading indicator
  */
 function hideLoadingIndicator() {
     const indicator = document.getElementById('mapLoadingIndicator');
@@ -130,31 +135,31 @@ function hideLoadingIndicator() {
 }
 
 /**
- * 初始化Leaflet地图
+ * Initialize Leaflet map
  */
 function initMap() {
-    console.log('[DEBUG] 开始初始化地图...');
-    console.log('[DEBUG] Leaflet版本:', L.version);
+    console.log('[DEBUG] Starting map initialization...');
+    console.log('[DEBUG] Leaflet version:', L.version);
 
-    // 初始化地图，中心设置在中国
+    // Initialize map, center set to China
     map = L.map('map').setView([35.5, 114.5], 5);
-    console.log('[DEBUG] 地图对象已创建');
+    console.log('[DEBUG] Map object created');
 
-    // 定义多个基础图层（优化性能配置）
+    // Define multiple base layers (optimized performance configuration)
     const baseLayers = {
-        '深色主题': L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        'Dark Theme': L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
             maxZoom: 20,
             minZoom: 3,
             maxNativeZoom: 18,
             tileSize: 256,
-            keepBuffer: 1,  // 减少缓冲区
-            updateWhenIdle: true,  // 只在空闲时更新
-            updateWhenZooming: false,  // 缩放时不立即更新
+            keepBuffer: 1,  // Reduce buffer
+            updateWhenIdle: true,  // Only update when idle
+            updateWhenZooming: false,  // Don't update immediately when zooming
             zIndex: 1
         }),
-        '地形图': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        'Terrain Map': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)',
             maxZoom: 17,
             minZoom: 3,
@@ -165,7 +170,7 @@ function initMap() {
             updateWhenZooming: false,
             zIndex: 1
         }),
-        '卫星图': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        'Satellite Map': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             attribution: '&copy; <a href="https://www.esri.com/">Esri</a>, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
             maxZoom: 19,
             minZoom: 3,
@@ -176,7 +181,7 @@ function initMap() {
             updateWhenZooming: false,
             zIndex: 1
         }),
-        '标准地图': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        'Standard Map': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             maxZoom: 19,
             minZoom: 3,
@@ -187,7 +192,7 @@ function initMap() {
             updateWhenZooming: false,
             zIndex: 1
         }),
-        '地形+等高线': L.tileLayer('https://tiles.wmflabs.org/hikebike/{z}/{x}/{y}.png', {
+        'Terrain+Contours': L.tileLayer('https://tiles.wmflabs.org/hikebike/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://www.wikimedia.org/">Wikimedia</a>',
             maxZoom: 17,
             minZoom: 3,
@@ -200,63 +205,63 @@ function initMap() {
         })
     };
 
-    console.log('[DEBUG] 图层对象已创建，图层数量:', Object.keys(baseLayers).length);
+    console.log('[DEBUG] Layer objects created, number of layers:', Object.keys(baseLayers).length);
 
-    // 添加默认图层（深色主题）
-    baseLayers['深色主题'].addTo(map);
-    console.log('[DEBUG] 默认图层已添加');
+    // Add default layer (Dark Theme)
+    baseLayers['Dark Theme'].addTo(map);
+    console.log('[DEBUG] Default layer added');
 
-    // 添加图层控制器
-    console.log('[DEBUG] 正在创建图层控制器...');
+    // Add layer controller
+    console.log('[DEBUG] Creating layer controller...');
     try {
         const layerControl = L.control.layers(baseLayers, null, {
             position: 'topright',
-            collapsed: false  // 默认展开
+            collapsed: false  // Default expanded
         });
-        console.log('[DEBUG] 图层控制器对象已创建:', layerControl);
+        console.log('[DEBUG] Layer controller object created:', layerControl);
         layerControl.addTo(map);
-        console.log('[DEBUG] 图层控制器已添加到地图');
+        console.log('[DEBUG] Layer controller added to map');
 
-        // 监听图层切换事件
+        // Listen for layer switch event
         map.on('baselayerchange', function(e) {
-            console.log('[DEBUG] 切换到图层:', e.name);
-            showLoadingIndicator('正在加载 ' + e.name + '...');
+            console.log('[DEBUG] Switched to layer:', e.name);
+            showLoadingIndicator('Loading ' + e.name + '...');
 
-            // 检查瓦片加载完成
+            // Check tile loading completion
             const checkLoading = function() {
                 const tiles = document.querySelectorAll('.leaflet-tile-container img');
                 const loadingTiles = Array.from(tiles).filter(img => !img.complete);
 
                 if (loadingTiles.length === 0) {
-                    // 所有瓦片加载完成
+                    // All tiles loaded
                     setTimeout(hideLoadingIndicator, 500);
                 } else {
-                    // 继续检查
+                    // Continue checking
                     setTimeout(checkLoading, 200);
                 }
             };
 
-            // 开始检查加载状态
+            // Start checking loading status
             setTimeout(checkLoading, 100);
         });
 
     } catch (error) {
-        console.error('[ERROR] 添加图层控制器失败:', error);
+        console.error('[ERROR] Failed to add layer controller:', error);
     }
 
-    // 监听地图移动事件
+    // Listen for map move event
     map.on('move', function() {
         const center = map.getCenter();
         document.getElementById('mapCenter').textContent =
             `${center.lat.toFixed(2)}°N, ${center.lng.toFixed(2)}°E`;
     });
 
-    console.log('[DEBUG] 地图初始化完成');
+    console.log('[DEBUG] Map initialization complete');
 }
 
-// ==================== 时间轴管理 ====================
+// ==================== Timeline Management ====================
 /**
- * 计算时间范围
+ * Calculate time range
  */
 function calculateTimeRange() {
     if (allFlightsData.length === 0) return;
@@ -264,7 +269,7 @@ function calculateTimeRange() {
     let minTime = Infinity;
     let maxTime = -Infinity;
 
-    // 遍历所有航班的所有轨迹点
+    // Iterate through all trajectory points of all flights
     allFlightsData.forEach(flight => {
         flight.route.forEach(point => {
             const timestamp = point.timestamp;
@@ -278,23 +283,23 @@ function calculateTimeRange() {
     timeRange = maxTime - minTime;
     currentTime = minTime;
 
-    console.log(`时间范围: ${new Date(minTime).toLocaleString()} - ${new Date(maxTime).toLocaleString()}`);
-    console.log(`时间跨度: ${(timeRange / 1000 / 3600).toFixed(2)} 小时`);
+    console.log(`Time range: ${new Date(minTime).toLocaleString()} - ${new Date(maxTime).toLocaleString()}`);
+    console.log(`Time span: ${(timeRange / 1000 / 3600).toFixed(2)} hours`);
 
-    // 更新UI
+    // Update UI
     updateTimeRangeDisplay();
     enableTimeSlider();
 }
 
 /**
- * 更新时间范围显示
+ * Update time range display
  */
 function updateTimeRangeDisplay() {
     const startDate = new Date(timeMin);
     const endDate = new Date(timeMax);
 
-    // 更新日期信息
-    const dateStr = startDate.toLocaleDateString('zh-CN', {
+    // Update date information
+    const dateStr = startDate.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -302,9 +307,9 @@ function updateTimeRangeDisplay() {
     });
     document.getElementById('dataDate').textContent = dateStr;
 
-    // 更新开始和结束时间
+    // Update start and end times
     const formatTime = (date) => {
-        return date.toLocaleTimeString('zh-CN', {
+        return date.toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit',
@@ -315,21 +320,21 @@ function updateTimeRangeDisplay() {
     document.getElementById('startTime').textContent = formatTime(startDate);
     document.getElementById('endTime').textContent = formatTime(endDate);
 
-    // 更新数据时长
+    // Update data duration
     const durationHours = (timeRange / 1000 / 3600).toFixed(1);
     const durationMinutes = (timeRange / 1000 / 60).toFixed(0);
     document.getElementById('dataDuration').textContent =
-        durationHours >= 1 ? `${durationHours} 小时` : `${durationMinutes} 分钟`;
+        durationHours >= 1 ? `${durationHours} hours` : `${durationMinutes} minutes`;
 
     updateTimeDisplay();
 }
 
 /**
- * 更新当前时间显示
+ * Update current time display
  */
 function updateTimeDisplay() {
     const currentDate = new Date(currentTime);
-    const timeStr = currentDate.toLocaleString('zh-CN', {
+    const timeStr = currentDate.toLocaleString('en-US', {
         month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
@@ -339,14 +344,14 @@ function updateTimeDisplay() {
     });
     document.getElementById('currentTime').textContent = timeStr;
 
-    // 更新滑块位置
+    // Update slider position
     const slider = document.getElementById('timeSlider');
     const progress = ((currentTime - timeMin) / timeRange) * 100;
     slider.value = progress;
 }
 
 /**
- * 启用时间滑块
+ * Enable time slider
  */
 function enableTimeSlider() {
     const slider = document.getElementById('timeSlider');
@@ -354,7 +359,7 @@ function enableTimeSlider() {
 
     slider.addEventListener('input', function(e) {
         if (isPlaying) {
-            toggleAnimation(); // 拖动时暂停播放
+            toggleAnimation(); // Pause playback when dragging
         }
 
         const progress = parseFloat(e.target.value);
@@ -364,14 +369,14 @@ function enableTimeSlider() {
     });
 }
 
-// ==================== 航班管理 ====================
+// ==================== Flight Management ====================
 /**
- * 计算两个坐标点之间的航向角度
- * @param {number} lat1 - 起点纬度
- * @param {number} lng1 - 起点经度
- * @param {number} lat2 - 终点纬度
- * @param {number} lng2 - 终点经度
- * @returns {number} 航向角度（0-360度，0为北，顺时针）
+ * Calculate bearing angle between two coordinate points
+ * @param {number} lat1 - Start point latitude
+ * @param {number} lng1 - Start point longitude
+ * @param {number} lat2 - End point latitude
+ * @param {number} lng2 - End point longitude
+ * @returns {number} Bearing angle (0-360 degrees, 0 is north, clockwise)
  */
 function calculateBearing(lat1, lng1, lat2, lng2) {
     const rad = Math.PI / 180;
@@ -384,17 +389,17 @@ function calculateBearing(lat1, lng1, lat2, lng2) {
               Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(diffLngRad);
 
     const bearing = Math.atan2(x, y) * 180 / Math.PI;
-    return (bearing + 360) % 360; // 转换为0-360度
+    return (bearing + 360) % 360; // Convert to 0-360 degrees
 }
 
 /**
- * 创建飞机图标
- * @param {number} heading - 航向角度（0-360度，0为北，90为东）
+ * Create plane icon
+ * @param {number} heading - Heading angle (0-360 degrees, 0 is north, 90 is east)
  */
 function createPlaneIcon(heading) {
-    // 根据航向旋转图标
-    // heading: 0=北, 90=东, 180=南, 270=西
-    // SVG飞机默认朝上（北），所以直接使用heading
+    // Rotate icon based on heading
+    // heading: 0=north, 90=east, 180=south, 270=west
+    // SVG plane defaults to facing up (north), so use heading directly
     const rotation = heading || 0;
 
     return L.divIcon({
@@ -422,15 +427,15 @@ function createPlaneIcon(heading) {
 }
 
 /**
- * 初始化所有航班（创建标记和轨迹线）
+ * Initialize all flights (create markers and trajectory lines)
  */
 function initializeFlights() {
-    console.log(`正在初始化 ${allFlightsData.length} 个航班...`);
+    console.log(`Initializing ${allFlightsData.length} flights...`);
 
     allFlightsData.forEach(flight => {
         const flightId = flight.flight_id;
 
-        // 绘制完整轨迹线（初始隐藏）
+        // Draw complete trajectory line (initially hidden)
         const latlngs = flight.route.map(point => [point.lat, point.lng]);
         const polyline = L.polyline(latlngs, {
             color: '#3b82f6',
@@ -441,11 +446,11 @@ function initializeFlights() {
 
         flightPolylines[flightId] = polyline;
 
-        // 创建飞机标记（初始位置在第一个点）
+        // Create plane marker (initial position at first point)
         const firstPoint = flight.route[0];
         let initialHeading = firstPoint.heading || 0;
 
-        // 如果有第二个点，计算实际航向
+        // If there's a second point, calculate actual heading
         if (flight.route.length > 1) {
             const secondPoint = flight.route[1];
             initialHeading = calculateBearing(
@@ -460,10 +465,10 @@ function initializeFlights() {
             icon: createPlaneIcon(initialHeading)
         }).addTo(map);
 
-        // 添加弹出信息
+        // Add popup information
         marker.bindPopup(createPopupContent(flight, 0));
 
-        // 点击标记时显示航班信息
+        // Show flight information when marker is clicked
         marker.on('click', function() {
             selectFlight(flightId);
         });
@@ -476,15 +481,15 @@ function initializeFlights() {
         };
     });
 
-    // 初始更新到起始时间
+    // Initial update to start time
     updateFlightPositions(timeMin);
 
-    // 更新统计
+    // Update statistics
     document.getElementById('totalFlightsCount').textContent = allFlightsData.length;
 }
 
 /**
- * 创建弹出窗口内容
+ * Create popup window content
  */
 function createPopupContent(flight, pointIndex) {
     const point = flight.route[pointIndex];
@@ -494,19 +499,19 @@ function createPopupContent(flight, pointIndex) {
         <div style="font-size: 13px; min-width: 200px;">
             <strong style="font-size: 15px;">${flight.callsign}</strong><br>
             <hr style="margin: 8px 0; border: none; border-top: 1px solid #ddd;">
-            <strong>机型:</strong> ${flight.type || 'N/A'}<br>
-            <strong>国籍:</strong> ${flight.country || 'N/A'}<br>
-            <strong>高度:</strong> ${(point.altitude * 3.28084).toFixed(0)} ft<br>
-            <strong>速度:</strong> ${point.speed.toFixed(0)} km/h<br>
-            <strong>航向:</strong> ${point.heading.toFixed(0)}°<br>
-            <strong>时间:</strong> ${date.toLocaleString('zh-CN')}<br>
-            <strong>位置:</strong> ${point.lat.toFixed(4)}°, ${point.lng.toFixed(4)}°
+            <strong>Aircraft Type:</strong> ${flight.type || 'N/A'}<br>
+            <strong>Country:</strong> ${flight.country || 'N/A'}<br>
+            <strong>Altitude:</strong> ${(point.altitude * 3.28084).toFixed(0)} ft<br>
+            <strong>Speed:</strong> ${point.speed.toFixed(0)} km/h<br>
+            <strong>Heading:</strong> ${point.heading.toFixed(0)}°<br>
+            <strong>Time:</strong> ${date.toLocaleString('en-US')}<br>
+            <strong>Position:</strong> ${point.lat.toFixed(4)}°, ${point.lng.toFixed(4)}°
         </div>
     `;
 }
 
 /**
- * 根据时间更新所有航班位置
+ * Update all flight positions based on time
  */
 function updateFlightPositions(targetTime) {
     activeFlights.clear();
@@ -515,7 +520,7 @@ function updateFlightPositions(targetTime) {
         const flightId = flight.flight_id;
         const flightMarker = flightMarkers[flightId];
 
-        // 找到最接近目标时间的轨迹点
+        // Find trajectory point closest to target time
         let closestPoint = null;
         let closestIndex = -1;
         let minDiff = Infinity;
@@ -529,13 +534,13 @@ function updateFlightPositions(targetTime) {
             }
         });
 
-        // 如果找到有效的点，并且时间差在合理范围内（5分钟内）
-        if (closestPoint && minDiff < 300000) { // 5分钟 = 300000毫秒
-            // 计算航向：从当前点到下一个点（如果有的话）
+        // If valid point found and time difference is within reasonable range (within 5 minutes)
+        if (closestPoint && minDiff < 300000) { // 5 minutes = 300000 milliseconds
+            // Calculate heading: from current point to next point (if available)
             let calculatedHeading = closestPoint.heading || 0;
 
             if (closestIndex < flight.route.length - 1) {
-                // 有下一个点，计算实际航向
+                // Has next point, calculate actual heading
                 const nextPoint = flight.route[closestIndex + 1];
                 calculatedHeading = calculateBearing(
                     closestPoint.lat,
@@ -545,12 +550,12 @@ function updateFlightPositions(targetTime) {
                 );
             }
 
-            // 更新标记位置
+            // Update marker position
             flightMarker.marker.setLatLng([closestPoint.lat, closestPoint.lng]);
             flightMarker.marker.setIcon(createPlaneIcon(calculatedHeading));
             flightMarker.marker.setPopupContent(createPopupContent(flight, closestIndex));
 
-            // 显示标记
+            // Show marker
             if (!flightMarker.visible) {
                 flightMarker.marker.addTo(map);
                 flightMarker.visible = true;
@@ -558,7 +563,7 @@ function updateFlightPositions(targetTime) {
 
             activeFlights.add(flightId);
         } else {
-            // 隐藏标记
+            // Hide marker
             if (flightMarker.visible) {
                 map.removeLayer(flightMarker.marker);
                 flightMarker.visible = false;
@@ -566,25 +571,25 @@ function updateFlightPositions(targetTime) {
         }
     });
 
-    // 更新活跃航班计数
+    // Update active flight count
     document.getElementById('activeFlightsCount').textContent = activeFlights.size;
     document.getElementById('activeFlights').textContent = activeFlights.size;
 
-    // 更新航班列表显示（如果没有选中航班，显示所有活跃航班）
+    // Update flight list display (if no flight selected, show all active flights)
     const selectedFlightText = document.getElementById('selectedFlight').textContent;
-    if (selectedFlightText === '未选择' || selectedFlightText === '') {
-        updateFlightListDisplay(null); // 显示所有活跃航班
+    if (selectedFlightText === 'None' || selectedFlightText === '') {
+        updateFlightListDisplay(null); // Show all active flights
     }
 }
 
 /**
- * 选中航班
+ * Select flight
  */
 function selectFlight(flightId) {
-    console.log('选中航班:', flightId);
+    console.log('Selected flight:', flightId);
     document.getElementById('selectedFlight').textContent = flightId;
 
-    // 找到对应航班并聚焦
+    // Find corresponding flight and focus
     const flightMarker = flightMarkers[flightId];
     if (flightMarker && flightMarker.visible) {
         const marker = flightMarker.marker;
@@ -592,19 +597,19 @@ function selectFlight(flightId) {
         marker.openPopup();
     }
 
-    // 更新航班列表显示选中航班的详细信息
+    // Update flight list display to show selected flight details
     updateFlightListDisplay(flightId);
 }
 
 /**
- * 更新航班列表显示
+ * Update flight list display
  */
 function updateFlightListDisplay(selectedFlightId = null) {
     const flightListContainer = document.getElementById('flightList');
     if (!flightListContainer) return;
 
     if (selectedFlightId) {
-        // 显示选中航班的详细信息
+        // Show selected flight details
         const flightMarker = flightMarkers[selectedFlightId];
         if (!flightMarker) return;
 
@@ -620,29 +625,29 @@ function updateFlightListDisplay(selectedFlightId = null) {
             <div class="flight-item selected">
                 <div class="flight-item-header">
                     <span class="flight-code">${flight.callsign}</span>
-                    <span class="flight-status active">已选中</span>
+                    <span class="flight-status active">Selected</span>
                 </div>
                 <div class="flight-info">
-                    <div><strong>机型:</strong> ${flight.type || 'N/A'}</div>
-                    <div><strong>国籍:</strong> ${flight.country || 'N/A'}</div>
-                    <div><strong>高度:</strong> ${altitudeFt} ft</div>
-                    <div><strong>速度:</strong> ${speedKmh} km/h</div>
-                    <div><strong>航向:</strong> ${point.heading.toFixed(0)}°</div>
-                    <div><strong>时间:</strong> ${date.toLocaleString('zh-CN')}</div>
-                    <div><strong>位置:</strong> ${point.lat.toFixed(4)}°N, ${point.lng.toFixed(4)}°E</div>
+                    <div><strong>Aircraft Type:</strong> ${flight.type || 'N/A'}</div>
+                    <div><strong>Country:</strong> ${flight.country || 'N/A'}</div>
+                    <div><strong>Altitude:</strong> ${altitudeFt} ft</div>
+                    <div><strong>Speed:</strong> ${speedKmh} km/h</div>
+                    <div><strong>Heading:</strong> ${point.heading.toFixed(0)}°</div>
+                    <div><strong>Time:</strong> ${date.toLocaleString('en-US')}</div>
+                    <div><strong>Position:</strong> ${point.lat.toFixed(4)}°N, ${point.lng.toFixed(4)}°E</div>
                 </div>
             </div>
         `;
     } else {
-        // 显示所有活跃航班列表
+        // Show all active flights list
         if (activeFlights.size === 0) {
             flightListContainer.innerHTML = `
                 <div class="flight-item">
                     <div class="flight-item-header">
-                        <span class="flight-code">无活跃航班</span>
+                        <span class="flight-code">No Active Flights</span>
                         <span class="flight-status inactive">--</span>
                     </div>
-                    <div class="flight-info">当前时间没有活跃航班</div>
+                    <div class="flight-info">No active flights at current time</div>
                 </div>
             `;
             return;
@@ -663,19 +668,19 @@ function updateFlightListDisplay(selectedFlightId = null) {
                 <div class="flight-item" onclick="selectFlight('${flightId}')" style="cursor: pointer;">
                     <div class="flight-item-header">
                         <span class="flight-code">${flight.callsign}</span>
-                        <span class="flight-status active">活跃</span>
+                        <span class="flight-status active">Active</span>
                     </div>
-                    <div class="flight-info">${flight.country} | 高度: ${altitudeFt}ft | 速度: ${speedKmh}km/h</div>
+                    <div class="flight-info">${flight.country} | Altitude: ${altitudeFt}ft | Speed: ${speedKmh}km/h</div>
                 </div>
             `;
         });
 
-        flightListContainer.innerHTML = html || '<div class="flight-info">无活跃航班</div>';
+        flightListContainer.innerHTML = html || '<div class="flight-info">No active flights</div>';
     }
 }
 
 /**
- * 获取当前时间对应的轨迹点索引
+ * Get trajectory point index corresponding to current time
  */
 function getCurrentPointIndex(flight, targetTime) {
     let closestIndex = -1;
@@ -692,19 +697,19 @@ function getCurrentPointIndex(flight, targetTime) {
     return closestIndex;
 }
 
-// ==================== 动画控制 ====================
+// ==================== Animation Control ====================
 /**
- * 播放/暂停动画
+ * Play/pause animation
  */
 function toggleAnimation() {
     isPlaying = !isPlaying;
     const btn = document.getElementById('playPauseBtn');
 
     if (isPlaying) {
-        btn.innerHTML = '<span>⏸</span><span>暂停</span>';
+        btn.innerHTML = '<span>⏸</span><span>Pause</span>';
         animate();
     } else {
-        btn.innerHTML = '<span>▶</span><span>播放</span>';
+        btn.innerHTML = '<span>▶</span><span>Play</span>';
         if (animationId) {
             cancelAnimationFrame(animationId);
         }
@@ -712,10 +717,10 @@ function toggleAnimation() {
 }
 
 /**
- * 动画循环
+ * Animation loop
  */
 let lastFrameTime = 0;
-const baseTimeInterval = 100; // 基础时间间隔（毫秒）
+const baseTimeInterval = 100; // Base time interval (milliseconds)
 
 function animate(frameTime) {
     if (!isPlaying) return;
@@ -723,16 +728,16 @@ function animate(frameTime) {
     if (!lastFrameTime) lastFrameTime = frameTime;
     const deltaTime = frameTime - lastFrameTime;
 
-    // 根据播放速度计算时间增量
-    // 播放速度1x = 实际速度的100倍（让1小时的数据在36秒内播放完）
+    // Calculate time increment based on playback speed
+    // Playback speed 1x = 100x actual speed (plays 1 hour of data in 36 seconds)
     const timeIncrement = deltaTime * 100 * animationSpeed;
 
     if (timeIncrement > 0) {
         currentTime += timeIncrement;
 
-        // 检查是否到达结束时间
+        // Check if end time reached
         if (currentTime >= timeMax) {
-            currentTime = timeMin; // 循环播放
+            currentTime = timeMin; // Loop playback
         }
 
         updateTimeDisplay();
@@ -744,7 +749,7 @@ function animate(frameTime) {
 }
 
 /**
- * 重置动画
+ * Reset animation
  */
 function resetAnimation() {
     if (isPlaying) {
@@ -757,14 +762,14 @@ function resetAnimation() {
 }
 
 /**
- * 清除所有航班
+ * Clear all flights
  */
 function clearFlights() {
     if (isPlaying) {
         toggleAnimation();
     }
 
-    // 清除标记
+    // Clear markers
     Object.values(flightMarkers).forEach(flightMarker => {
         if (flightMarker.visible) {
             map.removeLayer(flightMarker.marker);
@@ -772,12 +777,12 @@ function clearFlights() {
         }
     });
 
-    // 清除轨迹线
+    // Clear trajectory lines
     Object.values(flightPolylines).forEach(polyline => {
         map.removeLayer(polyline);
     });
 
-    // 重置数据
+    // Reset data
     allFlightsData = [];
     flightMarkers = {};
     flightPolylines = {};
@@ -789,60 +794,267 @@ function clearFlights() {
     document.getElementById('totalFlightsCount').textContent = '0';
 }
 
-// ==================== 事件监听与初始化 ====================
+// ==================== Event Listeners and Initialization ====================
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('页面加载完成，正在初始化...');
+    console.log('Page loaded, initializing...');
 
-    // 初始化地图
+    // Initialize map
     initMap();
 
-    // 播放/暂停按钮
+    // Play/pause button
     document.getElementById('playPauseBtn').addEventListener('click', toggleAnimation);
 
-    // 重置按钮
+    // Reset button
     document.getElementById('resetBtn').addEventListener('click', resetAnimation);
 
-    // 清除按钮
+    // Clear button
     document.getElementById('clearBtn').addEventListener('click', clearFlights);
 
-    // 速度滑块
+    // Speed slider
     const speedSlider = document.getElementById('speedSlider');
     if (speedSlider) {
         speedSlider.addEventListener('input', function(e) {
             animationSpeed = parseFloat(e.target.value);
             document.getElementById('speedValue').textContent = animationSpeed.toFixed(1);
-            console.log('播放速度已更改:', animationSpeed);
+            console.log('Playback speed changed:', animationSpeed);
         });
-        console.log('速度滑块事件监听器已附加');
+        console.log('Speed slider event listener attached');
     } else {
-        console.error('找不到速度滑块元素');
+        console.error('Speed slider element not found');
     }
 
-    // 加载ADSB数据
+    // Load ADSB data
     loadADSBData().then(data => {
         if (data.length > 0) {
-            console.log(`数据加载成功，正在处理 ${data.length} 个航班...`);
+            console.log(`Data loaded successfully, processing ${data.length} flights...`);
 
             allFlightsData = data;
 
-            // 计算时间范围
+            // Calculate time range
             calculateTimeRange();
 
-            // 初始化航班
+            // Initialize flights
             initializeFlights();
 
-            // 更新数据状态
+            // Update data status
             document.getElementById('dataStatus').className = 'status-dot online';
-            document.getElementById('dataStatusText').textContent = '数据已连接';
-            document.getElementById('dataSource').textContent = 'ADSB (已连接)';
+            document.getElementById('dataStatusText').textContent = 'Data Connected';
+            document.getElementById('dataSource').textContent = 'ADSB (Connected)';
 
-            console.log('初始化完成！');
+            console.log('Initialization complete!');
         } else {
-            console.warn('未加载到任何航班数据');
-            document.getElementById('dataStatusText').textContent = '数据加载失败';
+            console.warn('No flight data loaded');
+            document.getElementById('dataStatusText').textContent = 'Data Load Failed';
         }
     }).catch(error => {
-        console.error('数据加载出错:', error);
-        document.getElementById('dataStatusText').textContent = '加载错误';
+        console.error('Data loading error:', error);
+        document.getElementById('dataStatusText').textContent = 'Load Error';
     });
 });
+
+// ==================== Trajectory Prediction Functions ====================
+/**
+ * Predict trajectory for selected flight
+ */
+async function predictTrajectory() {
+    if (!selectedFlightId) {
+        alert('Please select a flight first by clicking on a flight in the list or map');
+        return;
+    }
+
+    const flightData = allFlightsData.find(f => f.flight_id === selectedFlightId);
+    if (!flightData) {
+        alert('Selected flight data not found');
+        return;
+    }
+
+    // Need at least 10 trajectory points for prediction
+    if (flightData.route.length < 10) {
+        alert(`Flight ${selectedFlightId} has insufficient trajectory points (${flightData.route.length} < 10 required)`);
+        return;
+    }
+
+    const predictBtn = document.getElementById('predictBtn');
+    predictBtn.disabled = true;
+    predictBtn.innerHTML = '<span>⏳</span><span>Predicting...</span>';
+
+    try {
+        // Prepare trajectory data for API (last 10 points)
+        const trajectory = flightData.route.slice(-10).map(point => ({
+            lat: point.lat,
+            lng: point.lng,
+            altitude: point.altitude,
+            speed: point.speed,
+            heading: point.heading || 0
+        }));
+
+        console.log('Sending prediction request for flight:', selectedFlightId);
+        console.log('Trajectory points:', trajectory.length);
+
+        const response = await fetch('http://localhost:5001/api/predict', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                trajectory: trajectory,
+                steps: predictionSteps
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`API request failed: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Prediction result:', result);
+
+        if (result.predictions && result.predictions.length > 0) {
+            displayPredictedTrajectory(selectedFlightId, result.predictions, flightData.route);
+            alert(`Successfully predicted ${result.predictions.length} future points for flight ${selectedFlightId}`);
+        } else {
+            throw new Error('No predictions returned');
+        }
+
+    } catch (error) {
+        console.error('Prediction failed:', error);
+        alert(`Prediction failed: ${error.message}\nMake sure the prediction API server is running on http://localhost:5001`);
+    } finally {
+        predictBtn.disabled = false;
+        predictBtn.innerHTML = '<span>🔮</span><span>Predict Selected</span>';
+    }
+}
+
+/**
+ * Display predicted trajectory on map
+ */
+function displayPredictedTrajectory(flightId, predictions, historicalRoute) {
+    // Remove old prediction if exists
+    if (predictionPolylines[flightId]) {
+        // Remove polyline
+        if (predictionPolylines[flightId].polyline) {
+            map.removeLayer(predictionPolylines[flightId].polyline);
+        }
+        // Remove markers
+        if (predictionPolylines[flightId].markers) {
+            predictionPolylines[flightId].markers.forEach(marker => {
+                map.removeLayer(marker);
+            });
+        }
+    }
+
+    // Initialize object to store prediction elements
+    predictionPolylines[flightId] = {
+        polyline: null,
+        markers: []
+    };
+
+    // Get last known position
+    const lastPoint = historicalRoute[historicalRoute.length - 1];
+
+    // Build predicted path from last position through predictions
+    const predictedPath = [
+        [lastPoint.lat, lastPoint.lng],
+        ...predictions.map(p => [p.lat, p.lng])
+    ];
+
+    // Create dashed polyline for predicted path
+    const predictionLine = L.polyline(predictedPath, {
+        color: '#f59e0b',  // Orange color for predictions
+        weight: 3,
+        opacity: 0.8,
+        dashArray: '10, 10'
+    }).addTo(map);
+
+    // Store the polyline
+    predictionPolylines[flightId].polyline = predictionLine;
+
+    // Add markers for prediction points
+    predictions.forEach((point, index) => {
+        const marker = L.circleMarker([point.lat, point.lng], {
+            radius: 6,
+            fillColor: '#f59e0b',
+            color: '#fff',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.8
+        }).addTo(map);
+
+        // Add popup with prediction info
+        const timeOffset = index * 30; // Assuming 30-second intervals
+        marker.bindPopup(`
+            <div style="font-size: 12px;">
+                <strong>Prediction Point ${index + 1}</strong><br>
+                <strong>Time:</strong> T+${timeOffset}s<br>
+                <strong>Position:</strong> ${point.lat.toFixed(4)}°, ${point.lng.toFixed(4)}°<br>
+                <strong>Altitude:</strong> ${(point.altitude * 3.28084).toFixed(0)} ft<br>
+                <strong>Speed:</strong> ${point.speed.toFixed(0)} km/h
+            </div>
+        `);
+
+        // Store marker reference
+        predictionPolylines[flightId].markers.push(marker);
+    });
+
+    // Fit map to show both historical and predicted paths
+    const group = L.featureGroup([
+        flightPolylines[flightId],
+        predictionLine
+    ]);
+    map.fitBounds(group.getBounds(), { padding: [50, 50] });
+}
+
+/**
+ * Clear predicted trajectories
+ */
+function clearPredictions() {
+    Object.keys(predictionPolylines).forEach(flightId => {
+        const predictionData = predictionPolylines[flightId];
+        if (predictionData) {
+            // Remove polyline
+            if (predictionData.polyline) {
+                map.removeLayer(predictionData.polyline);
+            }
+            // Remove markers
+            if (predictionData.markers) {
+                predictionData.markers.forEach(marker => {
+                    map.removeLayer(marker);
+                });
+            }
+        }
+    });
+    predictionPolylines = {};
+    console.log('All predictions cleared');
+}
+
+// ==================== Prediction Event Listeners ====================
+document.addEventListener('DOMContentLoaded', function() {
+    // Prediction steps slider
+    const stepsSlider = document.getElementById('predictionStepsSlider');
+    if (stepsSlider) {
+        stepsSlider.addEventListener('input', function(e) {
+            predictionSteps = parseInt(e.target.value);
+            document.getElementById('predictionSteps').textContent = predictionSteps;
+        });
+    }
+
+    // Predict button
+    const predictBtn = document.getElementById('predictBtn');
+    if (predictBtn) {
+        predictBtn.addEventListener('click', predictTrajectory);
+    }
+
+    // Clear prediction button
+    const clearPredictionBtn = document.getElementById('clearPredictionBtn');
+    if (clearPredictionBtn) {
+        clearPredictionBtn.addEventListener('click', clearPredictions);
+    }
+});
+
+// Update selectFlight function to set selectedFlightId
+const originalSelectFlight = selectFlight;
+selectFlight = function(flightId) {
+    originalSelectFlight.call(this, flightId);
+    selectedFlightId = flightId;
+    console.log('Flight selected for prediction:', flightId);
+};
